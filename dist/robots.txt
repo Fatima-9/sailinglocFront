@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Pages principales
+Allow: /
+Allow: /boats
+Allow: /about
+Allow: /contact
+
+# Empêcher l'indexation des pages privées
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /favoris
+Disallow: /gestion-bateaux
+
+# Sitemap
+Sitemap: http://localhost:5173/sitemap.xml 

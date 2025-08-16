@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Users, Euro, MapPin, Ship, Loader2, CheckCircle } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function Reservation() {
   const { boatId } = useParams();
@@ -37,16 +38,15 @@ export default function Reservation() {
   const fetchBoatDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`sailingloc-back-lilac.vercel.app/api/boats/${boatId}`);
+      console.log('🔄 Récupération des détails du bateau depuis MongoDB...');
       
-      if (!response.ok) {
-        throw new Error('Bateau non trouvé');
-      }
-
-      const data = await response.json();
+      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatId));
+      console.log('✅ Détails du bateau récupérés:', data);
+      
       setBoat(data);
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de la récupération des détails:', error);
+      setError('Bateau non trouvé: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -102,12 +102,11 @@ export default function Reservation() {
         return;
       }
 
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/bookings', {
+      console.log('🔄 Création de la réservation dans MongoDB...');
+      
+      const result = await apiCall(API_ENDPOINTS.BOOKINGS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           boatId: boatId,
           startDate: reservationData.startDate,
@@ -118,22 +117,17 @@ export default function Reservation() {
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la réservation');
-      }
-
-      const result = await response.json();
-      console.log('Réservation créée:', result);
+      console.log('✅ Réservation créée avec succès:', result);
       setSuccess(true);
       
-             // Rediriger vers "Mes Réservations" après 3 secondes
-       setTimeout(() => {
-         navigate('/mes-reservations');
-       }, 3000);
+      // Rediriger vers "Mes Réservations" après 3 secondes
+      setTimeout(() => {
+        navigate('/mes-reservations');
+      }, 3000);
 
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de la création de la réservation:', error);
+      setError('Erreur lors de la réservation: ' + error.message);
     } finally {
       setSubmitting(false);
     }

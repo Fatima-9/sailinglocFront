@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, X, Upload, MapPin, Ship, Users, Euro, Ruler } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
   const [formData, setFormData] = useState({
@@ -132,12 +133,11 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
         throw new Error('Vous devez être connecté');
       }
 
-      const response = await fetch(`sailingloc-back-lilac.vercel.app/api/boats/${boatData._id}`, {
+      console.log('🔄 Modification du bateau dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatData._id), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           nom: formData.nom,
           type: formData.type,
@@ -145,18 +145,13 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
           prix_jour: Number(formData.prix_jour),
           capacite: Number(formData.capacite),
           image: finalImageURL, // URL Firebase Storage
-                                destination: formData.destination,
+          destination: formData.destination,
           description: formData.description,
           equipements: formData.equipements
         })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de la modification du bateau');
-      }
-
+      console.log('✅ Bateau modifié avec succès:', data);
       setSuccess('Bateau modifié avec succès !');
       
       if (onBoatUpdated) {

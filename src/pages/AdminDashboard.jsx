@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Anchor, BarChart3, Settings, LogOut, Plus, Edit, Trash2, Eye, X } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -50,64 +51,36 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/auth/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des données du dashboard depuis MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.DASHBOARD, {
+        headers: getAuthHeaders(token)
       });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Accès non autorisé');
-          window.location.href = '/connexion';
-          return;
-        }
-        throw new Error('Erreur lors de la récupération des données');
-      }
-
-      const data = await response.json();
       
       // Récupérer les vraies données des bateaux
       let boatsData = [];
       try {
-        const boatsResponse = await fetch('sailingloc-back-lilac.vercel.app/api/boats', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        console.log('🔄 Récupération des bateaux depuis MongoDB...');
+        const boatsResult = await apiCall(API_ENDPOINTS.BOATS, {
+          headers: getAuthHeaders(token)
         });
-
-        if (boatsResponse.ok) {
-          const boatsResult = await boatsResponse.json();
-          boatsData = boatsResult || []; // L'API retourne directement le tableau
-          console.log(`Récupération de ${boatsData.length} bateaux depuis la base de données`);
-        } else {
-          console.log('Erreur API bateaux:', boatsResponse.status, boatsResponse.statusText);
-        }
+        boatsData = boatsResult || [];
+        console.log(`✅ ${boatsData.length} bateaux récupérés depuis MongoDB`);
       } catch (error) {
-        console.log('API des bateaux non disponible:', error.message);
+        console.log('❌ Erreur API bateaux:', error.message);
       }
 
       // Récupérer les vraies données des réservations
       let bookingsData = [];
       try {
-        const bookingsResponse = await fetch('sailingloc-back-lilac.vercel.app/api/bookings', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        console.log('🔄 Récupération des réservations depuis MongoDB...');
+        const bookingsResult = await apiCall(API_ENDPOINTS.BOOKINGS, {
+          headers: getAuthHeaders(token)
         });
-
-        if (bookingsResponse.ok) {
-          const bookingsResult = await bookingsResponse.json();
-          bookingsData = bookingsResult.bookings || [];
-          console.log(`Récupération de ${bookingsData.length} réservations depuis la base de données`);
-        } else {
-          console.log('Erreur API réservations:', bookingsResponse.status, bookingsResponse.statusText);
-        }
+        bookingsData = bookingsResult.bookings || [];
+        console.log(`✅ ${bookingsData.length} réservations récupérées depuis MongoDB`);
       } catch (error) {
-        console.log('API des réservations non disponible:', error.message);
+        console.log('❌ Erreur API réservations:', error.message);
       }
 
       // Calculer les vraies statistiques
@@ -196,12 +169,9 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await fetch(`sailingloc-back-lilac.vercel.app/api/auth/users/${userId}`, {
+        const response = await apiCall(`${API_ENDPOINTS.USERS}/${userId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getAuthHeaders(token)
         });
 
         if (!response.ok) {
@@ -262,12 +232,9 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/auth/register', {
+      const response = await apiCall(API_ENDPOINTS.REGISTER, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify(addFormData)
       });
 
@@ -312,12 +279,9 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch(`sailingloc-back-lilac.vercel.app/api/auth/users/${editingUser.id}`, {
+      const response = await apiCall(`${API_ENDPOINTS.USERS}/${editingUser.id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify(editFormData)
       });
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Users, Euro, MapPin, Ship, Loader2, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
 import AddReview from '../components/AddReview';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function MesReservations() {
   const [reservations, setReservations] = useState([]);
@@ -27,20 +28,17 @@ export default function MesReservations() {
         return;
       }
 
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/bookings/my-bookings', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      console.log('🔄 Récupération des réservations depuis MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.MY_BOOKINGS, {
+        headers: getAuthHeaders(token)
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des réservations');
-      }
-
-      const data = await response.json();
+      
+      console.log('✅ Réservations récupérées:', data);
       setReservations(data.data || []);
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de la récupération des réservations:', error);
+      setError('Erreur lors de la récupération des réservations: ' + error.message);
     } finally {
       setLoading(false);
     }

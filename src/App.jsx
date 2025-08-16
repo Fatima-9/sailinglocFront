@@ -19,6 +19,8 @@ import MentionsLegales from './pages/MentionsLegales';
 import Reservation from './pages/Reservation';
 import MesReservations from './pages/MesReservations';
 import ScrollToTop from './components/ScrollToTop';
+import FirebaseTest from './components/FirebaseTest';
+import ApiTestPage from './pages/ApiTestPage';
 
 function App() {
   return (
@@ -44,6 +46,10 @@ function App() {
             <Route path="/profil" element={<Profil />} />
             <Route path="/cgu-cgv" element={<CGU_CGV />} />
             <Route path="/mentions-legales" element={<MentionsLegales />} />
+            
+            {/* Routes de test */}
+            <Route path="/firebase-test" element={<FirebaseTest />} />
+            <Route path="/api-test" element={<ApiTestPage />} />
           </Routes>
         </main>
         <Footer />

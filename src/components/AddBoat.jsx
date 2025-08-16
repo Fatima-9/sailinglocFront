@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { Plus, X, Upload, MapPin, Ship, Users, Euro, Ruler } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { storage } from '../config/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
+  console.log('🔍 AddBoat render - isOpen:', isOpen);
+  
+  // Vérification de sécurité
+  if (!isOpen) {
+    console.log('🔍 AddBoat: Modal fermé, pas de rendu');
+    return null;
+  }
+
   const [formData, setFormData] = useState({
     nom: '',
     type: 'voilier',
@@ -11,14 +20,12 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
     prix_jour: '',
     capacite: '',
     image: '',
-    destination: '',
+    localisation: '',
     description: '',
     equipements: []
   });
-
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -67,7 +74,6 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
-        // Ne plus stocker l'image en Base64, on la stockera sur Firebase Storage
       };
       reader.readAsDataURL(file);
     }
@@ -77,62 +83,46 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      if (!formData.nom || !formData.type || !formData.longueur || !formData.prix_jour || !formData.capacite || !formData.destination) {
-        throw new Error('Tous les champs obligatoires doivent être remplis');
-      }
-
-      if (!selectedImage) {
-        throw new Error('Veuillez sélectionner une image pour le bateau');
-      }
-
-      if (!formData.destination) {
-        throw new Error('Veuillez sélectionner une destination');
-      }
-
-      // 1. Upload de l'image sur Firebase Storage
-      setSuccess('Upload de l\'image en cours...');
+      let imageURL = '';
       
-      const imageRef = ref(storage, `boats/${Date.now()}_${selectedImage.name}`);
-      const uploadResult = await uploadBytes(imageRef, selectedImage);
-      const imageURL = await getDownloadURL(uploadResult.ref);
+      if (selectedImage) {
+        console.log('🔄 Upload de l\'image vers Firebase Storage...');
+        const storageRef = ref(storage, `boats/${Date.now()}_${selectedImage.name}`);
+        const snapshot = await uploadBytes(storageRef, selectedImage);
+        imageURL = await getDownloadURL(snapshot.ref);
+        console.log('✅ Image uploadée:', imageURL);
+      }
 
-      setSuccess('Image uploadée ! Ajout du bateau...');
-
-      // 2. Ajout du bateau avec l'URL de l'image
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Vous devez être connecté');
+        throw new Error('Vous devez être connecté pour ajouter un bateau');
       }
 
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/boats', {
+      console.log('🔄 Ajout du bateau dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.BOATS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-                            body: JSON.stringify({
-                      nom: formData.nom,
-                      type: formData.type,
-                      longueur: Number(formData.longueur),
-                      prix_jour: Number(formData.prix_jour),
-                      capacite: Number(formData.capacite),
-                      image: imageURL, // URL Firebase Storage au lieu de Base64
-                      destination: formData.destination,
-                      description: formData.description,
-                      equipements: formData.equipements
-                    })
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          nom: formData.nom,
+          type: formData.type,
+          longueur: Number(formData.longueur),
+          prix_jour: Number(formData.prix_jour),
+          capacite: Number(formData.capacite),
+          image: imageURL, // URL Firebase Storage au lieu de Base64
+          destination: formData.localisation,
+          description: formData.description,
+          equipements: formData.equipements
+        })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de l\'ajout du bateau');
-      }
+      console.log('✅ Bateau ajouté avec succès:', data);
 
       setSuccess('Bateau ajouté avec succès !');
+      
+      // Réinitialiser le formulaire seulement après succès
       setFormData({
         nom: '',
         type: 'voilier',
@@ -148,7 +138,7 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
       setImagePreview(null);
 
       if (onBoatAdded) {
-        onBoatAdded(data.data);
+        onBoatAdded(data.data || data); // Gérer les deux formats de réponse possibles
       }
 
       setTimeout(() => {
@@ -157,7 +147,13 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
       }, 2000);
 
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de l\'ajout du bateau:', error);
+      console.error('❌ Détails de l\'erreur:', {
+        message: error.message,
+        stack: error.stack,
+        formData: formData
+      });
+      setError('Erreur lors de l\'ajout du bateau: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -182,14 +178,12 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <Ship className="h-6 w-6 text-blue-600" />
+            <ImageIcon className="h-6 w-6 text-blue-600" />
             Ajouter un bateau
           </h2>
           <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -243,7 +237,7 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Ruler className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Longueur (m) *
               </label>
               <input
@@ -262,7 +256,7 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Euro className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Prix/jour (€) *
               </label>
               <input
@@ -279,7 +273,7 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Users className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Capacité *
               </label>
               <input
@@ -357,12 +351,12 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Destination *
               </label>
               <select
-                name="destination"
-                value={formData.destination}
+                name="localisation"
+                value={formData.localisation}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -435,7 +429,7 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
                 </>
               ) : (
                 <>
-                  <Plus className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4" />
                   Ajouter le bateau
                 </>
               )}

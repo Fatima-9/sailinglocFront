@@ -5,6 +5,7 @@ import SearchFilters from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import BoatCard from '../components/BoatCard';
 import StarRating from '../components/StarRating';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Home() {
   const [boats, setBoats] = useState([]);
@@ -30,16 +31,14 @@ export default function Home() {
   const fetchBoats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/boats');
+      console.log('🔄 Récupération des bateaux depuis l\'API MongoDB...');
       
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des bateaux');
-      }
-
-      const data = await response.json();
+      const data = await apiCall(API_ENDPOINTS.BOATS);
+      console.log(`✅ ${data.length || 0} bateaux récupérés depuis MongoDB`);
       setBoats(data);
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de la récupération des bateaux:', error);
+      setError('Erreur lors de la récupération des bateaux: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -122,28 +121,20 @@ export default function Home() {
   const fetchTopReviews = async () => {
     try {
       setReviewsLoading(true);
-      console.log('🔄 Récupération des avis 5 étoiles depuis la table reviews...');
+      console.log('🔄 Récupération des avis 5 étoiles depuis MongoDB...');
       
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/reviews/five-stars?limit=6');
-      console.log('📡 Réponse API avis 5 étoiles:', response.status, response.statusText);
+      const data = await apiCall(`${API_ENDPOINTS.FIVE_STAR_REVIEWS}?limit=6`);
+      console.log('✅ Données avis 5 étoiles reçues depuis MongoDB:', data);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Données avis 5 étoiles reçues depuis la table reviews:', data);
-        
-        if (data.data && data.data.length > 0) {
-          console.log(`📝 ${data.data.length} avis 5 étoiles trouvés dans la table reviews`);
-          setTopReviews(data.data);
-        } else {
-          console.log('⚠️ Aucun avis 5 étoiles trouvé dans la table reviews');
-          setTopReviews([]);
-        }
+      if (data.data && data.data.length > 0) {
+        console.log(`📝 ${data.data.length} avis 5 étoiles trouvés dans MongoDB`);
+        setTopReviews(data.data);
       } else {
-        console.error('❌ Erreur API avis 5 étoiles:', response.status, response.statusText);
+        console.log('⚠️ Aucun avis 5 étoiles trouvé dans MongoDB');
         setTopReviews([]);
       }
     } catch (error) {
-      console.error('💥 Erreur réseau lors de la récupération des avis 5 étoiles:', error);
+      console.error('❌ Erreur lors de la récupération des avis:', error);
       setTopReviews([]);
     } finally {
       setReviewsLoading(false);

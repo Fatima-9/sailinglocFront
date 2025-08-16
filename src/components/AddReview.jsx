@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Star, X, MessageSquare, Upload, Send } from 'lucide-react';
+import { X, Star, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
-export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bookingId }) {
+export default function AddReview({ isOpen, onClose, boatData, bookingId, onReviewAdded }) {
   const [formData, setFormData] = useState({
     rating: 5,
     comment: '',
     images: []
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -52,23 +52,16 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.comment.trim()) {
+      setError('Veuillez ajouter un commentaire');
+      return;
+    }
+
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      if (!formData.comment.trim()) {
-        throw new Error('Le commentaire est obligatoire');
-      }
-
-      if (formData.comment.trim().length < 10) {
-        throw new Error('Le commentaire doit contenir au moins 10 caractères');
-      }
-
-      if (formData.comment.trim().length > 1000) {
-        throw new Error('Le commentaire ne peut pas dépasser 1000 caractères');
-      }
-
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Vous devez être connecté');
@@ -78,12 +71,11 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
       // En production, il faudrait uploader les images sur un service comme Firebase
       const imageUrls = formData.images.map(img => img.url);
 
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/reviews', {
+      console.log('🔄 Ajout de l\'avis dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.REVIEWS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           boatId: boatData._id,
           bookingId: bookingId,
@@ -93,11 +85,7 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
         })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de l\'ajout de l\'avis');
-      }
+      console.log('✅ Avis ajouté avec succès:', data);
 
       setSuccess('Avis ajouté avec succès !');
       
@@ -111,6 +99,7 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
       }, 2000);
 
     } catch (error) {
+      console.error('❌ Erreur lors de l\'ajout de l\'avis:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -135,7 +124,7 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-blue-600" />
+            <ImageIcon className="h-6 w-6 text-blue-600" />
             Laisser un avis
           </h2>
           <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -257,7 +246,7 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
                         onClick={() => removeImage(index)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                       >
-                        <X className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -287,7 +276,7 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
                 </>
               ) : (
                 <>
-                  <Send className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4" />
                   Publier l'avis
                 </>
               )}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, Grid, List, Ship } from 'lucide-react';
 import BoatCard from '../components/BoatCard';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Boats() {
   const [boats, setBoats] = useState([]);
@@ -22,17 +23,16 @@ export default function Boats() {
   const fetchBoats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/boats');
+      console.log('🔄 Récupération des bateaux depuis l\'API MongoDB...');
       
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des bateaux');
-      }
-
-      const data = await response.json();
+      const data = await apiCall(API_ENDPOINTS.BOATS);
+      console.log(`✅ ${data.length || 0} bateaux récupérés depuis MongoDB`);
+      
       setBoats(data);
       setFilteredBoats(data);
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de la récupération des bateaux:', error);
+      setError('Erreur lors de la récupération des bateaux: ' + error.message);
     } finally {
       setLoading(false);
     }

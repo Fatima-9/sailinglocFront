@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle, X } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, Clock, X } from 'lucide-react';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -9,10 +10,9 @@ export default function Contact() {
     message: '',
     email: ''
   });
-
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -21,6 +21,7 @@ export default function Contact() {
       [name]: value
     }));
     
+    // Effacer l'erreur du champ modifié
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -40,12 +41,20 @@ export default function Contact() {
       newErrors.prenom = 'Le prénom est requis';
     }
     
+    if (!formData.email.trim()) {
+      newErrors.email = 'L\'email est requis';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'L\'email n\'est pas valide';
+    }
+    
     if (!formData.telephone.trim()) {
       newErrors.telephone = 'Le téléphone est requis';
     }
     
     if (!formData.message.trim()) {
       newErrors.message = 'Le message est requis';
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = 'Le message doit contenir au moins 10 caractères';
     }
     
     setErrors(newErrors);
@@ -62,11 +71,10 @@ export default function Contact() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/contact', {
+      console.log('🔄 Envoi du message de contact...');
+      
+      await apiCall(API_ENDPOINTS.CONTACT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           nom: formData.nom,
           prenom: formData.prenom,
@@ -75,8 +83,8 @@ export default function Contact() {
           email: formData.email
         })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Erreur lors de l\'envoi du message.');
+      
+      console.log('✅ Message envoyé avec succès');
       
       // Afficher le message de succès moderne
       setShowSuccess(true);
@@ -88,6 +96,7 @@ export default function Contact() {
       }, 5000);
       
     } catch (error) {
+      console.error('❌ Erreur lors de l\'envoi du message:', error);
       alert(error.message || 'Erreur lors de l\'envoi du message.');
     } finally {
       setIsSubmitting(false);

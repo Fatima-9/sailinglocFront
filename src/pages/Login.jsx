@@ -1,44 +1,30 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Anchor } from 'lucide-react';
-import { ToastContainer, toast } from 'react-toastify';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
+  const [errors, setErrors] = useState({});
 
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.email.trim()) {
+    if (!formData.email) {
       newErrors.email = 'L\'email est requis';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Format d\'email invalide';
+      newErrors.email = 'L\'email n\'est pas valide';
     }
     
-    if (!formData.password.trim()) {
+    if (!formData.password) {
       newErrors.password = 'Le mot de passe est requis';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
@@ -58,22 +44,18 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/auth/login', {
+      console.log('🔄 Connexion en cours...');
+      
+      const data = await apiCall(API_ENDPOINTS.LOGIN, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password
         })
       });
-      if (!response.ok) {
-        const data = await response.json();
-        alert(data.message || 'Erreur lors de la connexion.');
-        throw new Error(data.message || 'Erreur lors de la connexion.');
-      }
-      const data = await response.json();
+      
+      console.log('✅ Connexion réussie:', data);
+      
       localStorage.setItem('token', data.token);
       localStorage.setItem('userPrenom', data.user.prenom);
       localStorage.setItem('userRole', data.user.role);
@@ -81,6 +63,7 @@ export default function Login() {
       localStorage.setItem('userNom', data.user.nom);
       localStorage.setItem('userEmail', data.user.email);
       localStorage.setItem('userTel', data.user.tel);
+      
       toast.success(
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ fontSize: 22, marginRight: 10 }}>✅</span>
@@ -102,10 +85,16 @@ export default function Login() {
           icon: false
         }
       );
+      
       // Redirection selon le rôle de l'utilisateur
-      const redirectPath = data.user.role === 'admin' ? '/admin' : '/';
-      setTimeout(() => navigate(redirectPath), 3100);
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+      
     } catch (error) {
+      console.error('❌ Erreur lors de la connexion:', error);
       alert(error.message || 'Erreur lors de la connexion.');
     } finally {
       setIsSubmitting(false);
@@ -114,7 +103,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
-      <ToastContainer />
       {/* Hero Section */}
       <section className="relative py-16 bg-gradient-to-br from-blue-800 via-blue-900 to-blue-800">
         <div 
@@ -126,7 +114,6 @@ export default function Login() {
         ></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center mb-6">
-            <Anchor className="h-12 w-12 text-white mr-4" />
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-wider">
               SAILINGLOC
             </h1>
@@ -156,13 +143,12 @@ export default function Login() {
                   EMAIL
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
                     type="email"
                     id="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.email ? 'border-red-500' : 'border-gray-200'
                     }`}
@@ -179,13 +165,12 @@ export default function Login() {
                   MOT DE PASSE
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="password"
                     name="password"
                     value={formData.password}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     className={`w-full pl-10 pr-12 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.password ? 'border-red-500' : 'border-gray-200'
                     }`}
@@ -228,7 +213,7 @@ export default function Login() {
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <Loader2 className="animate-spin h-5 w-5 text-white" />
                     <span>CONNEXION...</span>
                   </div>
                 ) : (

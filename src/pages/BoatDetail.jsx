@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Users, Calendar, Star, Check, Ship, Ruler, Euro, Loa
 import StarRating from '../components/StarRating';
 import AddReview from '../components/AddReview';
 import ReviewCard from '../components/ReviewCard';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function BoatDetail() {
   const { id } = useParams();
@@ -25,16 +26,15 @@ export default function BoatDetail() {
   const fetchBoatDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`sailingloc-back-lilac.vercel.app/api/boats/${id}`);
+      console.log('🔄 Récupération des détails du bateau depuis MongoDB...');
       
-      if (!response.ok) {
-        throw new Error('Bateau non trouvé');
-      }
-
-      const data = await response.json();
+      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(id));
+      console.log('✅ Détails du bateau récupérés:', data);
+      
       setBoat(data);
     } catch (error) {
-      setError(error.message);
+      console.error('❌ Erreur lors de la récupération des détails:', error);
+      setError('Bateau non trouvé: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -42,15 +42,16 @@ export default function BoatDetail() {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`sailingloc-back-lilac.vercel.app/api/reviews/boat/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setReviews(data.data || []);
-        setAverageRating(data.averageRating || 0);
-        setTotalReviews(data.total || 0);
-      }
+      console.log('🔄 Récupération des avis du bateau depuis MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.BOAT_REVIEWS(id));
+      console.log('✅ Avis du bateau récupérés:', data);
+      
+      setReviews(data.data || []);
+      setAverageRating(data.averageRating || 0);
+      setTotalReviews(data.total || 0);
     } catch (error) {
-      console.error('Erreur lors de la récupération des avis:', error);
+      console.error('❌ Erreur lors de la récupération des avis:', error);
     }
   };
 

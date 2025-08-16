@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Eye, EyeOff, Anchor } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -86,11 +87,11 @@ export default function Register() {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/auth/register', {
+      
+      console.log('🔄 Création de l\'utilisateur dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.REGISTER, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           nom: formData.nom,
           prenom: formData.prenom,
@@ -100,11 +101,9 @@ export default function Register() {
           role: formData.userType
         })
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Inscription échouée');
-      }
-      const data = await response.json();
+      
+      console.log('✅ Utilisateur créé avec succès:', data);
+      
       localStorage.setItem('userNom', data.user.nom);
       toast.success(
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -129,6 +128,7 @@ export default function Register() {
       );
       setTimeout(() => navigate('/connexion'), 3100);
     } catch (error) {
+      console.error('❌ Erreur lors de la création de l\'utilisateur:', error);
       toast.error(error.message || 'Erreur lors de l\'inscription.', {
         position: 'top-center',
         autoClose: 3000,
