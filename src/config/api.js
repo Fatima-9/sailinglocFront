@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   REGISTER: `${API_BASE_URL}/api/auth/register`,
   DASHBOARD: `${API_BASE_URL}/api/auth/dashboard`,
   USERS: `${API_BASE_URL}/api/auth/users`,
+  UPDATE_PROFILE: `${API_BASE_URL}/api/user/update`,
   
   // Bateaux
   BOATS: `${API_BASE_URL}/api/boats`,

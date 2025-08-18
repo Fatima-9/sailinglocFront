@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function Profil() {
   // Préremplir depuis le localStorage si dispo (sinon vide)
@@ -24,11 +25,23 @@ export default function Profil() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
+    
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Vous devez être connecté pour modifier votre profil');
+      }
+
       const userId = localStorage.getItem('userId');
-      const response = await fetch('sailingloc-back-lilac.vercel.app/api/user/update', {
+      if (!userId) {
+        throw new Error('ID utilisateur non trouvé');
+      }
+
+      console.log('🔄 Mise à jour du profil...');
+      
+      const data = await apiCall(API_ENDPOINTS.UPDATE_PROFILE, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           id: userId,
           nom: formData.nom,
@@ -38,13 +51,17 @@ export default function Profil() {
           password: formData.password
         })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Erreur lors de la mise à jour');
+
+      console.log('✅ Profil mis à jour avec succès:', data);
+      
       // Met à jour le localStorage
-      localStorage.setItem('userNom', data.user.nom);
-      localStorage.setItem('userPrenom', data.user.prenom);
-      localStorage.setItem('userEmail', data.user.email);
-      localStorage.setItem('userTel', data.user.tel);
+      if (data.user) {
+        localStorage.setItem('userNom', data.user.nom);
+        localStorage.setItem('userPrenom', data.user.prenom);
+        localStorage.setItem('userEmail', data.user.email);
+        localStorage.setItem('userTel', data.user.tel);
+      }
+      
       toast.success(
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ fontSize: 22, marginRight: 10 }}>✅</span>
@@ -65,9 +82,15 @@ export default function Profil() {
           icon: false
         }
       );
+      
       setMessage('');
-    } catch (err) {
-      setMessage(err.message);
+      
+      // Réinitialiser le mot de passe après succès
+      setFormData(prev => ({ ...prev, password: '' }));
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour du profil:', error);
+      setMessage('Erreur lors de la mise à jour du profil: ' + error.message);
     }
   };
 
