@@ -224,7 +224,7 @@ export default function FirebaseTest() {
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="voilier">Voilier</option>
-                  <option value="moteur">Bateau à moteur</option>
+                  <option value="yacht">Yacht</option>
                   <option value="catamaran">Catamaran</option>
                 </select>
                 <input

@@ -242,7 +242,7 @@ export default function Home() {
                   >
                     <option value="">Type bateau</option>
                     <option value="voilier">Voilier</option>
-                    <option value="bateau à moteur">Bateau à moteur</option>
+                    <option value="yacht">Yacht</option>
                     <option value="catamaran">Catamaran</option>
                   </select>
                 </div>

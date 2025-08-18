@@ -231,7 +231,7 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
                 required
               >
                 <option value="voilier">Voilier</option>
-                <option value="bateau à moteur">Bateau à moteur</option>
+                <option value="yacht">Yacht</option>
                 <option value="catamaran">Catamaran</option>
               </select>
             </div>

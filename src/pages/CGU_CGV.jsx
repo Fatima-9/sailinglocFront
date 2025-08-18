@@ -14,7 +14,7 @@ export default function CGU_CGV() {
 
           <section className="mb-6">
             <h3 className="text-xl font-bold mb-2 text-blue-700">1. Présentation de la plateforme</h3>
-            <p className="text-gray-700">SailingLoc est une plateforme de mise en relation entre propriétaires de bateaux et particuliers souhaitant louer un voilier ou bateau à moteur en Europe. La société est basée à La Rochelle, sous le statut SAS (RCS La Rochelle B 923 456 789).</p>
+            <p className="text-gray-700">SailingLoc est une plateforme de mise en relation entre propriétaires de bateaux et particuliers souhaitant louer un voilier ou yacht en Europe. La société est basée à La Rochelle, sous le statut SAS (RCS La Rochelle B 923 456 789).</p>
           </section>
 
           <section className="mb-6">
