@@ -21,6 +21,7 @@ import MesReservations from './pages/MesReservations';
 import ScrollToTop from './components/ScrollToTop';
 import FirebaseTest from './components/FirebaseTest';
 import ApiTestPage from './pages/ApiTestPage';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
             {/* Routes de test */}
             <Route path="/firebase-test" element={<FirebaseTest />} />
             <Route path="/api-test" element={<ApiTestPage />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />
