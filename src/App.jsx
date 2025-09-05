@@ -26,6 +26,8 @@ import CookieConsent from "./components/CookieConsent";
 import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import FirebaseTest from './components/FirebaseTest';
+import ApiTestPage from './pages/ApiTestPage';
 
 function App() {
   return (
@@ -59,6 +61,11 @@ function App() {
             <Route path="/profil" element={<Profil />} />
             <Route path="/cgu-cgv" element={<CGU_CGV />} />
             <Route path="/mentions-legales" element={<MentionsLegales />} />
+            
+            {/* Routes de test */}
+            <Route path="/firebase-test" element={<FirebaseTest />} />
+            <Route path="/api-test" element={<ApiTestPage />} />
+            
             {/* Route 404 - doit être placée en dernier */}
             <Route path="*" element={<NotFound />} />
           </Routes>

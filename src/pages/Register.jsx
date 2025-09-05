@@ -4,6 +4,7 @@ import { Mail, Lock, User, Phone, Eye, EyeOff, Anchor } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Captcha from '../components/Captcha';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -111,11 +112,11 @@ export default function Register() {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      
+      console.log('🔄 Création de l\'utilisateur dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.REGISTER, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           nom: formData.nom,
           prenom: formData.prenom,
@@ -135,11 +136,8 @@ export default function Register() {
           userAnswer: captchaData.userAnswer
         })
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Inscription échouée');
-      }
-      const data = await response.json();
+      
+      console.log('✅ Utilisateur créé avec succès:', data);
       localStorage.setItem('userNom', data.user.nom);
       toast.success(
         <div style={{ display: 'flex', alignItems: 'center' }}>

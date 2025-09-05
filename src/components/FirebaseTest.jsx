@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../config/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
 
 export default function FirebaseTest() {
   const [user, setUser] = useState(null);
@@ -123,6 +124,22 @@ export default function FirebaseTest() {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6">Test Firebase - Nouvelle Configuration</h2>
+
+      {/* Lien vers le test API MongoDB */}
+      <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2 text-orange-800">
+          🗄️ Test API MongoDB
+        </h3>
+        <p className="text-orange-700 mb-3">
+          Testez la connexion à votre API backend MongoDB pour récupérer les données des bateaux et avis.
+        </p>
+        <Link
+          to="/api-test"
+          className="inline-block bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition-colors"
+        >
+          🧪 Tester l'API MongoDB
+        </Link>
+      </div>
       
       {/* Section Authentification */}
       <div className="bg-blue-50 p-4 rounded-lg mb-6">

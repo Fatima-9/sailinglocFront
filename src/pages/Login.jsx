@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Anchor } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Captcha from '../components/Captcha';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -65,11 +66,10 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      console.log('🔄 Connexion en cours...');
+      
+      const data = await apiCall(API_ENDPOINTS.LOGIN, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -78,12 +78,8 @@ export default function Login() {
           userAnswer: captchaData.userAnswer
         })
       });
-      if (!response.ok) {
-        const data = await response.json();
-        alert(data.message || 'Erreur lors de la connexion.');
-        throw new Error(data.message || 'Erreur lors de la connexion.');
-      }
-      const data = await response.json();
+      
+      console.log('✅ Connexion réussie:', data);
       localStorage.setItem('token', data.token);
       localStorage.setItem('userPrenom', data.user.prenom);
       localStorage.setItem('userRole', data.user.role);

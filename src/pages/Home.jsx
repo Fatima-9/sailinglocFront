@@ -15,6 +15,7 @@ import SearchFilters from "../components/SearchFilters";
 import SearchResults from "../components/SearchResults";
 import BoatCard from "../components/BoatCard";
 import StarRating from "../components/StarRating";
+import { API_ENDPOINTS, apiCall } from '../config/api';
 const heroImgUrl = new URL(
   "../../assets/Yacht-charter-M-Y-ELTON_9.jpg",
   import.meta.url
@@ -44,16 +45,16 @@ export default function Home() {
   const fetchBoats = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:3001/api/boats");
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la récupération des bateaux");
-      }
-
-      const data = await response.json();
+      console.log('🔄 Récupération des bateaux depuis l\'API MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.BOATS);
+      console.log(`✅ ${data.length || 0} bateaux récupérés depuis MongoDB`);
+      
       setBoats(data);
+      setFilteredBoats(data);
     } catch (error) {
-      setError(error.message);
+      setError('Erreur lors de la récupération des bateaux: ' + error.message);
+      console.error('❌ Erreur lors de la récupération des bateaux:', error);
     } finally {
       setLoading(false);
     }
@@ -141,41 +142,16 @@ export default function Home() {
   const fetchTopReviews = async () => {
     try {
       setReviewsLoading(true);
-      console.log(
-        "🔄 Récupération des avis 5 étoiles depuis la table reviews..."
-      );
+      console.log('🔄 Récupération des avis 5 étoiles depuis MongoDB...');
+      
+      const data = await apiCall(`${API_ENDPOINTS.FIVE_STAR_REVIEWS}?limit=3`);
+      console.log('✅ Données avis 5 étoiles reçues depuis MongoDB:', data);
 
-      const response = await fetch(
-        "http://localhost:3001/api/reviews/five-stars?limit=3"
-      );
-      console.log(
-        "📡 Réponse API avis 5 étoiles:",
-        response.status,
-        response.statusText
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log(
-          "✅ Données avis 5 étoiles reçues depuis la table reviews:",
-          data
-        );
-
-        if (data.data && data.data.length > 0) {
-          console.log(
-            `📝 ${data.data.length} avis 5 étoiles trouvés dans la table reviews`
-          );
-          setTopReviews(data.data);
-        } else {
-          console.log("⚠️ Aucun avis 5 étoiles trouvé dans la table reviews");
-          setTopReviews([]);
-        }
+      if (data.data && data.data.length > 0) {
+        console.log(`📝 ${data.data.length} avis 5 étoiles trouvés dans MongoDB`);
+        setTopReviews(data.data);
       } else {
-        console.error(
-          "❌ Erreur API avis 5 étoiles:",
-          response.status,
-          response.statusText
-        );
+        console.log('⚠️ Aucun avis 5 étoiles trouvé dans MongoDB');
         setTopReviews([]);
       }
     } catch (error) {

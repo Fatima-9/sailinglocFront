@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, X, Upload, MapPin, Ship, Users, Euro, Ruler, Settings, Calendar } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 import BoatAvailability from './BoatAvailability';
 
 export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
@@ -153,27 +154,15 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
         throw new Error('Vous devez être connecté pour ajouter un bateau');
       }
 
-      const response = await fetch('http://localhost:3001/api/boats', {
+      console.log('🔄 Ajout du bateau dans MongoDB...');
+      
+      const newBoat = await apiCall(API_ENDPOINTS.BOATS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(boatData),
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(boatData)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          throw new Error('Vous devez être connecté pour ajouter un bateau');
-        } else if (response.status === 403) {
-          throw new Error('Vous n\'avez pas les permissions pour ajouter un bateau');
-        } else {
-          throw new Error(errorData.message || 'Erreur lors de la création du bateau');
-        }
-      }
-
-      const newBoat = await response.json();
+      
+      console.log('✅ Bateau ajouté avec succès:', newBoat);
 
       // Les disponibilités sont maintenant incluses directement dans la création du bateau
       console.log('✅ Bateau créé avec succès:', newBoat);
