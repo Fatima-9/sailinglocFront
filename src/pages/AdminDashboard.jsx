@@ -357,9 +357,6 @@ export default function AdminDashboard() {
         if (data.pagination) {
           setBoatsPagination(data.pagination);
         }
-      } else {
-        toast.error('Erreur lors de la récupération des bateaux');
-      }
     } catch (error) {
       console.error('Erreur lors de la récupération des bateaux:', error);
       toast.error('Erreur lors de la récupération des bateaux');
@@ -898,11 +895,6 @@ export default function AdminDashboard() {
         if (data.pagination) {
           setReviewsPagination(data.pagination);
         }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Erreur API avis:', response.status, errorData);
-        toast.error(`Erreur lors de la récupération des avis: ${errorData.message || response.statusText}`);
-      }
     } catch (error) {
       console.error('Erreur réseau avis:', error);
       toast.error('Erreur réseau lors de la récupération des avis');

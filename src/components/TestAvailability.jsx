@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 const TestAvailability = () => {
   const [boatId, setBoatId] = useState('');
@@ -18,24 +19,15 @@ const TestAvailability = () => {
     try {
       console.log('🧪 Test de récupération des disponibilités pour le bateau:', boatId);
       
-      const response = await fetch(`http://localhost:3001/api/boats/${boatId}/availability`);
+      console.log('🔄 Test de récupération des disponibilités depuis MongoDB...');
       
-      console.log('📡 Réponse du serveur:', response.status, response.statusText);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Disponibilités récupérées:', data);
+      try {
+        const data = await apiCall(`${API_ENDPOINTS.BOAT_DETAIL(boatId)}/availability`);
+        console.log('✅ Disponibilités récupérées depuis MongoDB:', data);
         setAvailabilities(data);
-      } else {
-        console.error('❌ Erreur:', response.status, response.statusText);
-        
-        try {
-          const errorData = await response.json();
-          console.error('Détails de l\'erreur:', errorData);
-          setError(`Erreur ${response.status}: ${errorData.message || 'Erreur inconnue'}`);
-        } catch (e) {
-          setError(`Erreur ${response.status}: ${response.statusText}`);
-        }
+      } catch (error) {
+        console.error('❌ Erreur lors de la récupération des disponibilités:', error.message);
+        setError(`Erreur: ${error.message}`);
       }
     } catch (error) {
       console.error('❌ Erreur lors du test:', error);
@@ -57,23 +49,14 @@ const TestAvailability = () => {
     try {
       console.log('🧪 Test de récupération du bateau:', boatId);
       
-      const response = await fetch(`http://localhost:3001/api/boats/${boatId}`);
+      console.log('🔄 Test de récupération du bateau depuis MongoDB...');
       
-      console.log('📡 Réponse du serveur:', response.status, response.statusText);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Bateau récupéré:', data);
-      } else {
-        console.error('❌ Erreur:', response.status, response.statusText);
-        
-        try {
-          const errorData = await response.json();
-          console.error('Détails de l\'erreur:', errorData);
-          setError(`Erreur ${response.status}: ${errorData.message || 'Erreur inconnue'}`);
-        } catch (e) {
-          setError(`Erreur ${response.status}: ${response.statusText}`);
-        }
+      try {
+        const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatId));
+        console.log('✅ Bateau récupéré depuis MongoDB:', data);
+      } catch (error) {
+        console.error('❌ Erreur lors de la récupération du bateau:', error.message);
+        setError(`Erreur: ${error.message}`);
       }
     } catch (error) {
       console.error('❌ Erreur lors du test:', error);

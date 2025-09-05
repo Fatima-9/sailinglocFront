@@ -72,14 +72,15 @@ export default function BoatDetail() {
 
   const handleHelpfulClick = async (reviewId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/reviews/${reviewId}/helpful`, {
+      console.log('🔄 Mise à jour du vote utile...');
+      
+      await apiCall(`${API_ENDPOINTS.REVIEWS}/${reviewId}/helpful`, {
         method: 'PUT'
       });
       
-      if (response.ok) {
-        // Rafraîchir la liste des avis pour mettre à jour le compteur
-        fetchReviews();
-      }
+      console.log('✅ Vote utile mis à jour');
+      // Rafraîchir la liste des avis pour mettre à jour le compteur
+      fetchReviews();
     } catch (error) {
       console.error('Erreur lors du marquage utile:', error);
     }
