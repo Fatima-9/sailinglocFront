@@ -46,11 +46,18 @@ export default function BoatDetail() {
       console.log('🔄 Récupération des avis du bateau depuis MongoDB...');
       
       const data = await apiCall(API_ENDPOINTS.BOAT_REVIEWS(id));
-      console.log('✅ Avis du bateau récupérés:', data);
+      console.log('📊 Structure de la réponse API avis:', data);
       
-      setReviews(data.data || []);
-      setAverageRating(data.averageRating || 0);
-      setTotalReviews(data.total || 0);
+      // Gérer différentes structures de réponse
+      const reviews = data.data || data.reviews || data || [];
+      const averageRating = data.averageRating || data.rating || 0;
+      const totalReviews = data.total || data.count || reviews.length;
+      
+      console.log(`✅ ${reviews.length || 0} avis récupérés depuis MongoDB`);
+      
+      setReviews(reviews);
+      setAverageRating(averageRating);
+      setTotalReviews(totalReviews);
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des avis:', error);
     }

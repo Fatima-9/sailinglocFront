@@ -48,10 +48,14 @@ export default function Home() {
       console.log('🔄 Récupération des bateaux depuis l\'API MongoDB...');
       
       const data = await apiCall(API_ENDPOINTS.BOATS);
-      console.log(`✅ ${data.length || 0} bateaux récupérés depuis MongoDB`);
+      console.log('📊 Structure de la réponse API:', data);
       
-      setBoats(data);
-      setFilteredBoats(data);
+      // Gérer différentes structures de réponse
+      const boats = data.data || data.boats || data || [];
+      console.log(`✅ ${boats.length || 0} bateaux récupérés depuis MongoDB`);
+      
+      setBoats(boats);
+      setFilteredBoats(boats);
     } catch (error) {
       setError('Erreur lors de la récupération des bateaux: ' + error.message);
       console.error('❌ Erreur lors de la récupération des bateaux:', error);

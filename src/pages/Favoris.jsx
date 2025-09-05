@@ -32,8 +32,13 @@ export default function Favoris() {
         headers: getAuthHeaders(token)
       });
       
-      console.log('✅ Favoris récupérés:', data);
-      setFavorites(data.data || []);
+      console.log('📊 Structure de la réponse API:', data);
+      
+      // Gérer différentes structures de réponse
+      const favorites = data.data || data.favorites || data || [];
+      console.log(`✅ ${favorites.length || 0} favoris récupérés depuis MongoDB`);
+      
+      setFavorites(favorites);
     } catch (error) {
       setError(error.message);
     } finally {

@@ -31,8 +31,13 @@ export default function MesReservations() {
         headers: getAuthHeaders(token)
       });
       
-      console.log('✅ Réservations récupérées:', data);
-      setReservations(data.data || []);
+      console.log('📊 Structure de la réponse API:', data);
+      
+      // Gérer différentes structures de réponse
+      const reservations = data.data || data.reservations || data || [];
+      console.log(`✅ ${reservations.length || 0} réservations récupérées depuis MongoDB`);
+      
+      setReservations(reservations);
     } catch (error) {
       setError(error.message);
     } finally {

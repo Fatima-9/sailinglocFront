@@ -33,8 +33,13 @@ export default function GestionBateaux() {
         headers: getAuthHeaders(token)
       });
       
-      console.log('✅ Bateaux récupérés:', data);
-      setBoats(data);
+      console.log('📊 Structure de la réponse API:', data);
+      
+      // Gérer différentes structures de réponse
+      const boats = data.data || data.boats || data || [];
+      console.log(`✅ ${boats.length || 0} bateaux récupérés depuis MongoDB`);
+      
+      setBoats(boats);
     } catch (error) {
       setError(error.message);
     } finally {
