@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Users, Calendar, Star, Check, Ship, Ruler, Euro, Loa
 import StarRating from '../components/StarRating';
 import AddReview from '../components/AddReview';
 import ReviewCard from '../components/ReviewCard';
-import { API_ENDPOINTS, apiCall } from '../config/api';
+import HeartButton from '../components/HeartButton';
 
 export default function BoatDetail() {
   const { id } = useParams();
@@ -26,15 +26,16 @@ export default function BoatDetail() {
   const fetchBoatDetails = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Récupération des détails du bateau depuis MongoDB...');
+      const response = await fetch(`http://localhost:3001/api/boats/${id}`);
       
-      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(id));
-      console.log('✅ Détails du bateau récupérés:', data);
-      
+      if (!response.ok) {
+        throw new Error('Bateau non trouvé');
+      }
+
+      const data = await response.json();
       setBoat(data);
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des détails:', error);
-      setError('Bateau non trouvé: ' + error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -42,16 +43,15 @@ export default function BoatDetail() {
 
   const fetchReviews = async () => {
     try {
-      console.log('🔄 Récupération des avis du bateau depuis MongoDB...');
-      
-      const data = await apiCall(API_ENDPOINTS.BOAT_REVIEWS(id));
-      console.log('✅ Avis du bateau récupérés:', data);
-      
-      setReviews(data.data || []);
-      setAverageRating(data.averageRating || 0);
-      setTotalReviews(data.total || 0);
+      const response = await fetch(`http://localhost:3001/api/reviews/boat/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(data.data || []);
+        setAverageRating(data.averageRating || 0);
+        setTotalReviews(data.total || 0);
+      }
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des avis:', error);
+      console.error('Erreur lors de la récupération des avis:', error);
     }
   };
 
@@ -71,7 +71,7 @@ export default function BoatDetail() {
 
   const handleHelpfulClick = async (reviewId) => {
     try {
-      const response = await fetch(`sailingloc-back-lilac.vercel.app/api/reviews/${reviewId}/helpful`, {
+      const response = await fetch(`http://localhost:3001/api/reviews/${reviewId}/helpful`, {
         method: 'PUT'
       });
       
@@ -131,7 +131,7 @@ export default function BoatDetail() {
             </div>
             <div className="flex items-center space-x-1 text-sm text-gray-600">
               <MapPin size={16} />
-              <span className="capitalize">{boat.type}</span>
+              <span className="capitalize">{boat.destination}</span>
             </div>
           </div>
         </div>
@@ -151,6 +151,7 @@ export default function BoatDetail() {
               <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-md font-medium">
                 {boat.type}
               </div>
+              <HeartButton boatId={boat._id} />
             </div>
 
             {/* Details */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, Grid, List, Ship } from 'lucide-react';
 import BoatCard from '../components/BoatCard';
-import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Boats() {
   const [boats, setBoats] = useState([]);
@@ -23,16 +22,17 @@ export default function Boats() {
   const fetchBoats = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Récupération des bateaux depuis l\'API MongoDB...');
+      const response = await fetch('http://localhost:3001/api/boats');
       
-      const data = await apiCall(API_ENDPOINTS.BOATS);
-      console.log(`✅ ${data.length || 0} bateaux récupérés depuis MongoDB`);
-      
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des bateaux');
+      }
+
+      const data = await response.json();
       setBoats(data);
       setFilteredBoats(data);
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des bateaux:', error);
-      setError('Erreur lors de la récupération des bateaux: ' + error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }

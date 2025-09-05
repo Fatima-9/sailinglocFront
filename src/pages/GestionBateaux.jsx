@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Trash2, Pencil, Plus, X, Image as ImageIcon, Ship, MapPin, Euro, Users, Ruler } from 'lucide-react';
 import AddBoat from '../components/AddBoat';
 import EditBoat from '../components/EditBoat';
-import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function GestionBateaux() {
-  const navigate = useNavigate();
   const [boats, setBoats] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -16,38 +13,33 @@ export default function GestionBateaux() {
 
   // Récupérer les bateaux depuis l'API
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('🔍 Pas de token, redirection vers la connexion');
-      navigate('/login');
-      return;
-    }
     fetchBoats();
-  }, [navigate]);
+  }, []);
 
   const fetchBoats = async () => {
     try {
       setLoading(true);
-      setError('');
       const token = localStorage.getItem('token');
       
       if (!token) {
         setError('Vous devez être connecté');
-        navigate('/login');
         return;
       }
 
-      console.log('🔄 Récupération des bateaux depuis MongoDB...');
-      
-      const data = await apiCall(API_ENDPOINTS.MY_BOATS, {
-        headers: getAuthHeaders(token)
+      const response = await fetch('http://localhost:3001/api/boats/my-boats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
-      
-      console.log('✅ Bateaux récupérés:', data);
-      setBoats(data || []);
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des bateaux');
+      }
+
+      const data = await response.json();
+      setBoats(data);
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des bateaux:', error);
-      setError('Erreur lors de la récupération des bateaux: ' + error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -60,20 +52,21 @@ export default function GestionBateaux() {
 
     try {
       const token = localStorage.getItem('token');
-      console.log('🔄 Suppression du bateau depuis MongoDB...');
-      
-      await apiCall(API_ENDPOINTS.BOAT_DETAIL(id), {
+      const response = await fetch(`http://localhost:3001/api/boats/${id}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(token)
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
-      
-      console.log('✅ Bateau supprimé avec succès');
-      
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression');
+      }
+
       // Mettre à jour la liste locale
-      setBoats(boats.filter(boat => boat._id !== id));
+      setBoats(boats.filter(b => b._id !== id));
     } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression: ' + error.message);
+      setError(error.message);
     }
   };
 
@@ -83,25 +76,20 @@ export default function GestionBateaux() {
   };
 
   const handleAdd = () => {
-    console.log('🔍 handleAdd appelé, ouverture du modal');
     setShowModal(true);
-    console.log('🔍 showModal mis à true:', true);
   };
 
   const handleBoatAdded = (newBoat) => {
-    console.log('🔍 handleBoatAdded appelé avec:', newBoat);
     setBoats([...boats, newBoat]);
   };
 
   const handleBoatUpdated = (updatedBoat) => {
-    console.log('🔍 handleBoatUpdated appelé avec:', updatedBoat);
     setBoats(boats.map(boat => 
       boat._id === updatedBoat._id ? updatedBoat : boat
     ));
   };
 
   const handleModalClose = () => {
-    console.log('🔍 handleModalClose appelé, fermeture du modal');
     setShowModal(false);
   };
 
@@ -115,33 +103,7 @@ export default function GestionBateaux() {
       <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement de vos bateaux...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto">
-          <Ship className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Erreur de chargement</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="space-x-3">
-            <button
-              onClick={fetchBoats}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              🔄 Réessayer
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              🔑 Se connecter
-            </button>
-          </div>
+          <p className="text-gray-600">Chargement des bateaux...</p>
         </div>
       </div>
     );

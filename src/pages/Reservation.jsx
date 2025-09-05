@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Users, Euro, MapPin, Ship, Loader2, CheckCircle } from 'lucide-react';
-import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
+import BoatCalendar from '../components/BoatCalendar';
+import BookingConflictChecker from '../components/BookingConflictChecker';
+import AlertPopup from '../components/AlertPopup';
 
 export default function Reservation() {
   const { boatId } = useParams();
@@ -12,6 +14,14 @@ export default function Reservation() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [existingBookings, setExistingBookings] = useState([]);
+  const [alertPopup, setAlertPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'error',
+    details: null
+  });
   
   const [reservationData, setReservationData] = useState({
     startDate: '',
@@ -35,18 +45,46 @@ export default function Reservation() {
     }
   }, [reservationData.startDate, reservationData.endDate, reservationData.numberOfGuests, boat]);
 
+  // Vérifier la validité des dates et effacer l'erreur si nécessaire
+  useEffect(() => {
+    if (reservationData.startDate && reservationData.endDate && boat) {
+      const startDate = new Date(reservationData.startDate);
+      const endDate = new Date(reservationData.endDate);
+      
+      // Vérifier si les dates sont valides (accepter aujourd'hui)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (startDate <= endDate && startDate >= today) {
+        // Si les dates sont valides, effacer l'erreur
+        setError('');
+      }
+    }
+  }, [reservationData.startDate, reservationData.endDate, boat]);
+
   const fetchBoatDetails = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Récupération des détails du bateau depuis MongoDB...');
+      const response = await fetch(`http://localhost:3001/api/boats/${boatId}`);
       
-      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatId));
-      console.log('✅ Détails du bateau récupérés:', data);
-      
+      if (!response.ok) {
+        throw new Error('Bateau non trouvé');
+      }
+
+      const data = await response.json();
       setBoat(data);
+      
+      // Récupérer les réservations existantes depuis la nouvelle route
+      const bookingsResponse = await fetch(`http://localhost:3001/api/bookings/boat/${boatId}`);
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json();
+        if (bookingsData.success) {
+          setExistingBookings(bookingsData.data);
+          console.log('Réservations existantes chargées:', bookingsData.data);
+        }
+      }
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des détails:', error);
-      setError('Bateau non trouvé: ' + error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -57,16 +95,55 @@ export default function Reservation() {
 
     const start = new Date(reservationData.startDate);
     const end = new Date(reservationData.endDate);
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
     
-    if (days > 0) {
-      const total = days * boat.prix_jour;
-      setReservationData(prev => ({ ...prev, totalPrice: total }));
-    }
+    const total = days * boat.prix_jour;
+    setReservationData(prev => ({ ...prev, totalPrice: total }));
+  };
+
+  const calculateDuration = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Réinitialiser l'heure pour la comparaison des dates
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    // Une réservation d'un jour (même date) compte pour 1 jour
+    // Une réservation de plusieurs jours compte le nombre exact de jours
+    return Math.max(1, Math.ceil(diffDays));
   };
 
   const handleInputChange = (field, value) => {
     setReservationData(prev => ({ ...prev, [field]: value }));
+    
+    // Réinitialiser l'erreur quand une date est modifiée
+    if (field === 'startDate' || field === 'endDate') {
+      setError('');
+    }
+  };
+
+  const handleDateSelect = (startDate, endDate) => {
+    setReservationData(prev => ({
+      ...prev,
+      startDate: startDate || '',
+      endDate: endDate || ''
+    }));
+    
+    // Réinitialiser l'erreur dès qu'une date est modifiée
+    setError('');
+  };
+
+  const handleConflictDetected = (alertData) => {
+    setAlertPopup(alertData);
+    
+    // Si c'est une période non disponible, mettre à jour l'état d'erreur
+    if (alertData.title === 'Période non disponible') {
+      setError('Période non disponible - Veuillez sélectionner des dates valides');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -80,14 +157,42 @@ export default function Reservation() {
     const startDate = new Date(reservationData.startDate);
     const endDate = new Date(reservationData.endDate);
     
-    if (startDate >= endDate) {
-      setError('La date de fin doit être postérieure à la date de début');
+    if (startDate > endDate) {
+      setError('La date de fin doit être égale ou postérieure à la date de début');
       return;
     }
 
-    if (startDate < new Date()) {
+    // Vérifier que la date de début n'est pas dans le passé (mais accepter aujourd'hui)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour comparer seulement les dates
+    
+    if (startDate < today) {
       setError('La date de début ne peut pas être dans le passé');
       return;
+    }
+
+    // Vérifier les conflits de réservation
+    if (existingBookings && existingBookings.length > 0) {
+      const hasConflicts = existingBookings.some(booking => {
+        if (booking.status === 'cancelled') return false;
+        
+        const bookingStart = new Date(booking.startDate);
+        const bookingEnd = new Date(booking.endDate);
+        
+        // Réinitialiser l'heure pour la comparaison
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        bookingStart.setHours(0, 0, 0, 0);
+        bookingEnd.setHours(0, 0, 0, 0);
+        
+        // Vérifier s'il y a un chevauchement
+        return !(endDate <= bookingStart || startDate >= bookingEnd);
+      });
+      
+      if (hasConflicts) {
+        setError('La période sélectionnée chevauche des réservations existantes. Veuillez choisir une autre période.');
+        return;
+      }
     }
 
     try {
@@ -102,32 +207,31 @@ export default function Reservation() {
         return;
       }
 
-      console.log('🔄 Création de la réservation dans MongoDB...');
-      
-      const result = await apiCall(API_ENDPOINTS.BOOKINGS, {
+      // Démarrer un paiement Stripe Checkout et rediriger
+      const response = await fetch('http://localhost:3001/api/payment/create-checkout-session', {
         method: 'POST',
-        headers: getAuthHeaders(token),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           boatId: boatId,
           startDate: reservationData.startDate,
           endDate: reservationData.endDate,
           numberOfGuests: reservationData.numberOfGuests,
-          specialRequests: reservationData.specialRequests,
-          totalPrice: reservationData.totalPrice
+          specialRequests: reservationData.specialRequests
         })
       });
 
-      console.log('✅ Réservation créée avec succès:', result);
-      setSuccess(true);
-      
-      // Rediriger vers "Mes Réservations" après 3 secondes
-      setTimeout(() => {
-        navigate('/mes-reservations');
-      }, 3000);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de l’initiation du paiement');
+      }
 
+      const { url } = await response.json();
+      window.location.href = url;
     } catch (error) {
-      console.error('❌ Erreur lors de la création de la réservation:', error);
-      setError('Erreur lors de la réservation: ' + error.message);
+      setError(error.message);
     } finally {
       setSubmitting(false);
     }
@@ -166,12 +270,12 @@ export default function Reservation() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Réservation confirmée !
           </h2>
-                     <p className="text-gray-600 mb-6">
-             Votre réservation a été créée avec succès ! Elle apparaîtra dans votre espace "Mes Réservations".
-           </p>
-           <p className="text-sm text-gray-500">
-             Redirection vers "Mes Réservations" dans quelques secondes...
-           </p>
+          <p className="text-gray-600 mb-6">
+            Votre réservation a été créée avec succès ! Elle apparaîtra dans votre espace "Mes Réservations".
+          </p>
+          <p className="text-sm text-gray-500">
+            Redirection vers "Mes Réservations" dans quelques secondes...
+          </p>
         </div>
       </div>
     );
@@ -267,23 +371,50 @@ export default function Reservation() {
                   />
                 </div>
 
-                {/* Bouton de soumission */}
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {submitting ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Création de la réservation...</span>
-                    </div>
-                  ) : (
-                    'Confirmer la réservation'
-                  )}
-                </button>
+                                 {/* Bouton de soumission - caché si période non disponible */}
+                 {!error && (
+                   <button
+                     type="submit"
+                     disabled={submitting}
+                     className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                   >
+                     {submitting ? (
+                       <div className="flex items-center justify-center space-x-2">
+                         <Loader2 className="h-5 w-5 animate-spin" />
+                         <span>Redirection vers le paiement...</span>
+                       </div>
+                     ) : (
+                       'Confirmer la réservation'
+                     )}
+                   </button>
+                 )}
               </form>
+
+              {/* Vérificateur de conflits */}
+              {reservationData.startDate && reservationData.endDate && (
+                <BookingConflictChecker
+                  startDate={reservationData.startDate}
+                  endDate={reservationData.endDate}
+                  boatAvailability={boat?.availability}
+                  existingBookings={existingBookings}
+                  onConflictDetected={handleConflictDetected}
+                />
+              )}
             </div>
+
+            {/* Calendrier de disponibilité */}
+            {boat && boat.availability && boat.availability.startDate && (
+              <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Calendrier de disponibilité</h3>
+                <BoatCalendar
+                  boatAvailability={boat.availability}
+                  existingBookings={existingBookings}
+                  onDateSelect={handleDateSelect}
+                  selectedStartDate={reservationData.startDate}
+                  selectedEndDate={reservationData.endDate}
+                />
+              </div>
+            )}
           </div>
 
           {/* Résumé de la réservation */}
@@ -315,6 +446,32 @@ export default function Reservation() {
                     <span>Capacité : {boat.capacite} personnes</span>
                   </div>
                 </div>
+
+                {/* Informations de disponibilité */}
+                {boat.availability && boat.availability.startDate && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center space-x-2 text-green-800 mb-2">
+                      <Calendar size={16} />
+                      <span className="font-medium text-sm">Disponibilité</span>
+                    </div>
+                    <div className="text-xs text-green-700 space-y-1">
+                      <div>
+                        Du {new Date(boat.availability.startDate).toLocaleDateString('fr-FR')}
+                      </div>
+                      <div>
+                        Au {new Date(boat.availability.endDate).toLocaleDateString('fr-FR')}
+                      </div>
+                      <div className="font-medium">
+                        Prix : {boat.availability.price}€ par jour
+                      </div>
+                      {boat.availability.notes && (
+                        <div className="italic">
+                          {boat.availability.notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Détails de la réservation */}
@@ -329,7 +486,7 @@ export default function Reservation() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Durée</span>
                       <span className="font-medium">
-                        {Math.ceil((new Date(reservationData.endDate) - new Date(reservationData.startDate)) / (1000 * 60 * 60 * 24))} jours
+                        {calculateDuration(reservationData.startDate, reservationData.endDate)} jours
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -361,6 +518,16 @@ export default function Reservation() {
           </div>
         </div>
       </div>
+
+      {/* Popup d'alerte */}
+      <AlertPopup
+        isOpen={alertPopup.isOpen}
+        onClose={() => setAlertPopup({ ...alertPopup, isOpen: false })}
+        title={alertPopup.title}
+        message={alertPopup.message}
+        type={alertPopup.type}
+        details={alertPopup.details}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Users, Euro, Ruler } from 'lucide-react';
 import StarRating from './StarRating';
+import HeartButton from './HeartButton';
 
 export default function BoatCard({ boat, viewMode = 'grid' }) {
   if (viewMode === 'list') {
@@ -9,12 +10,13 @@ export default function BoatCard({ boat, viewMode = 'grid' }) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-center space-x-6">
           {/* Image */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 relative">
             <img
               src={boat.image}
               alt={boat.nom}
               className="w-32 h-24 object-cover rounded-lg"
             />
+            <HeartButton boatId={boat._id} className="top-2 right-2" />
           </div>
           
           {/* Informations */}
@@ -30,7 +32,7 @@ export default function BoatCard({ boat, viewMode = 'grid' }) {
             <div className="flex items-center space-x-4 mb-3 text-sm text-gray-600">
               <div className="flex items-center space-x-1">
                 <MapPin size={16} />
-                <span className="capitalize">{boat.type}</span>
+                <span className="capitalize">{boat.destination}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Ruler size={16} />
@@ -42,7 +44,7 @@ export default function BoatCard({ boat, viewMode = 'grid' }) {
               </div>
               <div className="flex items-center space-x-1">
                 <MapPin size={16} />
-                <span>{boat.localisation}</span>
+                <span>{boat.destination}</span>
               </div>
             </div>
             
@@ -82,6 +84,7 @@ export default function BoatCard({ boat, viewMode = 'grid' }) {
         <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
           {boat.type}
         </div>
+        <HeartButton boatId={boat._id} />
       </div>
       
       <div className="p-6">
@@ -96,7 +99,7 @@ export default function BoatCard({ boat, viewMode = 'grid' }) {
         <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
           <div className="flex items-center space-x-1">
             <MapPin size={16} />
-            <span className="capitalize">{boat.type}</span>
+            <span className="capitalize">{boat.destination}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Users size={16} />

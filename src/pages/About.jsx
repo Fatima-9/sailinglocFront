@@ -38,7 +38,7 @@ export default function About() {
             À propos
           </h1>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
-            Une question ? Écrivez-nous, on vous répond en et si bien !
+            Une question ? Écrivez-nous, nous vous répondons rapidement !
           </p>
         </div>
       </section>
@@ -51,7 +51,7 @@ export default function About() {
               <div className="bg-blue-900 text-white p-8 rounded-2xl">
                 <h2 className="text-3xl font-bold mb-6">À PROPOS</h2>
                 <p style={{ fontSize: '1.1rem', color: 'var(--color-gray-800)', marginBottom: '1.5rem' }}>
-                  SailingLoc est une start-up innovante fondée par M. Voisin, spécialisée dans la mise en relation pour la location de voiliers et de bateaux à moteur. Basée à La Rochelle (Charente-Maritime), SailingLoc propose une plateforme collaborative, sécurisée et centrée sur l’expérience utilisateur.<br /><br />
+                  SailingLoc est une start-up innovante fondée par M. Voisin, spécialisée dans la mise en relation pour la location de voiliers et de yachts. Basée à La Rochelle (Charente-Maritime), SailingLoc propose une plateforme collaborative, sécurisée et centrée sur l’expérience utilisateur.<br /><br />
                   Notre service s’adresse aussi bien aux passionnés de navigation qu’aux vacanciers occasionnels, en facilitant la location de bateaux auprès de particuliers ou de professionnels partout en Europe. Que ce soit pour une sortie en mer, une croisière en famille, entre amis ou en couple, SailingLoc vous invite à vivre des aventures maritimes authentiques et inoubliables.
                 </p>
                 <h2 className="text-orange-500 text-[1.3rem] mb-4 font-bold">Informations légales</h2>
@@ -84,8 +84,7 @@ export default function About() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-lg text-gray-700 leading-relaxed">
-            Notre <strong>mission</strong> rendre la navigation <strong>accessible</strong>, <strong>simple</strong> et <strong>sécurisée</strong> 
-            pour tous les passionnés de mer.
+            Notre <strong>mission</strong> est de rendre la navigation <strong>accessible</strong>, <strong>simple</strong> et <strong>sécurisée</strong> pour tous les passionnés de mer.
           </p>
         </div>
       </section>

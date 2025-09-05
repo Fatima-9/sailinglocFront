@@ -73,12 +73,20 @@ export default function Header() {
                   <Heart className="h-5 w-5" />
                 </Link>
                 {userRole === 'proprietaire' && (
-                  <Link
-                    to="/gestion-bateaux"
-                    className="text-blue-600 hover:text-blue-800 px-4 py-2 text-sm font-medium transition-colors flex items-center"
-                  >
-                    Gestion bateaux
-                  </Link>
+                  <>
+                    <Link
+                      to="/gestion-bateaux"
+                      className="text-blue-600 hover:text-blue-800 px-4 py-2 text-sm font-medium transition-colors flex items-center"
+                    >
+                      Gestion bateaux
+                    </Link>
+                    <Link
+                      to="/gestion-reservations"
+                      className="text-blue-600 hover:text-blue-800 px-4 py-2 text-sm font-medium transition-colors flex items-center"
+                    >
+                      Gestion réservations
+                    </Link>
+                  </>
                 )}
                 {userRole === 'admin' && (
                   <Link
@@ -99,13 +107,15 @@ export default function Header() {
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-4 z-50 border border-gray-100">
                       <div className="px-4 py-2 text-gray-700 text-sm mb-2">Bienvenue <span className="font-bold text-blue-700">{userPrenom}</span></div>
                       
-                      <Link
-                        to="/mes-reservations"
-                        onClick={() => setShowAccountMenu(false)}
-                        className="block w-full text-left px-4 py-2 text-blue-600 hover:bg-blue-50 text-sm font-medium"
-                      >
-                        Mes Réservations
-                      </Link>
+                      {userRole !== 'proprietaire' && userRole !== 'admin' && (
+                        <Link
+                          to="/mes-reservations"
+                          onClick={() => setShowAccountMenu(false)}
+                          className="block w-full text-left px-4 py-2 text-blue-600 hover:bg-blue-50 text-sm font-medium"
+                        >
+                          Mes Réservations
+                        </Link>
+                      )}
                       
                       <Link
                         to="/profil"
@@ -177,13 +187,22 @@ export default function Header() {
                 {userPrenom ? (
                   <>
                     {userRole === 'proprietaire' && (
-                      <Link
-                        to="/gestion-bateaux"
-                        className="block w-full text-center border border-blue-600 text-blue-600 px-3 py-2 rounded-full text-base font-medium hover:bg-blue-50 transition-colors flex items-center justify-center"
-                        onClick={() => { setIsMenuOpen(false); handleNavClick(); }}
-                      >
-                        Gestion bateaux
-                      </Link>
+                      <>
+                        <Link
+                          to="/gestion-bateaux"
+                          className="block w-full text-center border border-blue-600 text-blue-600 px-3 py-2 rounded-full text-base font-medium hover:bg-blue-50 transition-colors flex items-center justify-center"
+                          onClick={() => { setIsMenuOpen(false); handleNavClick(); }}
+                        >
+                          Gestion bateaux
+                        </Link>
+                        <Link
+                          to="/gestion-reservations"
+                          className="block w-full text-center border border-blue-600 text-blue-600 px-3 py-2 rounded-full text-base font-medium hover:bg-blue-50 transition-colors flex items-center justify-center"
+                          onClick={() => { setIsMenuOpen(false); handleNavClick(); }}
+                        >
+                          Gestion réservations
+                        </Link>
+                      </>
                     )}
                     {userRole === 'admin' && (
                       <Link
@@ -202,13 +221,15 @@ export default function Header() {
                       <Heart className="h-5 w-5" />
                     </Link>
                     
-                    <Link
-                      to="/mes-reservations"
-                      className="block w-full text-center border border-blue-600 text-blue-600 px-3 py-2 rounded-full text-base font-medium hover:bg-blue-50 transition-colors flex items-center justify-center"
-                      onClick={() => { setIsMenuOpen(false); handleNavClick(); }}
-                    >
-                      Mes Réservations
-                    </Link>
+                    {userRole !== 'proprietaire' && userRole !== 'admin' && (
+                      <Link
+                        to="/mes-reservations"
+                        className="block w-full text-center border border-blue-600 text-blue-600 px-3 py-2 rounded-full text-base font-medium hover:bg-blue-50 transition-colors flex items-center justify-center"
+                        onClick={() => { setIsMenuOpen(false); handleNavClick(); }}
+                      >
+                        Mes Réservations
+                      </Link>
+                    )}
                     <div className="relative">
                       <button
                         onClick={() => setShowAccountMenu((v) => !v)}

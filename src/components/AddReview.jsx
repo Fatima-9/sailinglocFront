@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { X, Star, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
-import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
+import { Star, MessageSquare, Send, X } from 'lucide-react';
 
-export default function AddReview({ isOpen, onClose, boatData, bookingId, onReviewAdded }) {
+export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bookingId }) {
   const [formData, setFormData] = useState({
     rating: 5,
-    comment: '',
-    images: []
+    comment: ''
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -24,68 +23,51 @@ export default function AddReview({ isOpen, onClose, boatData, bookingId, onRevi
     }));
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length + formData.images.length > 5) {
-      setError('Maximum 5 images autorisées');
-      return;
-    }
 
-    const newImages = files.map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file),
-      file: file
-    }));
-
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...newImages]
-    }));
-  };
-
-  const removeImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.comment.trim()) {
-      setError('Veuillez ajouter un commentaire');
-      return;
-    }
-
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
+      if (!formData.comment.trim()) {
+        throw new Error('Le commentaire est obligatoire');
+      }
+
+      if (formData.comment.trim().length < 10) {
+        throw new Error('Le commentaire doit contenir au moins 10 caractères');
+      }
+
+      if (formData.comment.trim().length > 1000) {
+        throw new Error('Le commentaire ne peut pas dépasser 1000 caractères');
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Vous devez être connecté');
       }
 
-      // Pour l'instant, on envoie juste les URLs des images
-      // En production, il faudrait uploader les images sur un service comme Firebase
-      const imageUrls = formData.images.map(img => img.url);
-
-      console.log('🔄 Ajout de l\'avis dans MongoDB...');
-      
-      const data = await apiCall(API_ENDPOINTS.REVIEWS, {
+      const response = await fetch('http://localhost:3001/api/reviews', {
         method: 'POST',
-        headers: getAuthHeaders(token),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           boatId: boatData._id,
           bookingId: bookingId,
           rating: formData.rating,
-          comment: formData.comment.trim(),
-          images: imageUrls
+          comment: formData.comment.trim()
         })
       });
 
-      console.log('✅ Avis ajouté avec succès:', data);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur lors de l\'ajout de l\'avis');
+      }
 
       setSuccess('Avis ajouté avec succès !');
       
@@ -99,7 +81,6 @@ export default function AddReview({ isOpen, onClose, boatData, bookingId, onRevi
       }, 2000);
 
     } catch (error) {
-      console.error('❌ Erreur lors de l\'ajout de l\'avis:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -124,7 +105,7 @@ export default function AddReview({ isOpen, onClose, boatData, bookingId, onRevi
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <ImageIcon className="h-6 w-6 text-blue-600" />
+            <MessageSquare className="h-6 w-6 text-blue-600" />
             Laisser un avis
           </h2>
           <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -200,60 +181,7 @@ export default function AddReview({ isOpen, onClose, boatData, bookingId, onRevi
             </p>
           </div>
 
-          {/* Upload d'images */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ajouter des photos (optionnel)
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">
-                Glissez-déposez vos photos ici ou cliquez pour sélectionner
-              </p>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-              >
-                Sélectionner des photos
-              </label>
-              <p className="text-xs text-gray-500 mt-2">
-                Maximum 5 images (JPG, PNG, GIF, WebP)
-              </p>
-            </div>
 
-            {/* Aperçu des images */}
-            {formData.images.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Images sélectionnées :</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {formData.images.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={image.url}
-                        alt={`Image ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Boutons */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
@@ -276,7 +204,7 @@ export default function AddReview({ isOpen, onClose, boatData, bookingId, onRevi
                 </>
               ) : (
                 <>
-                  <ImageIcon className="h-4 w-4" />
+                  <Send className="h-4 w-4" />
                   Publier l'avis
                 </>
               )}
