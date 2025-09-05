@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
@@ -21,12 +22,11 @@ export default function PaymentSuccess() {
           throw new Error("Vous devez être connecté pour finaliser la réservation.");
         }
 
-        const res = await fetch('http://localhost:3001/api/payment/confirm', {
+        console.log('🔄 Confirmation du paiement...');
+        
+        const res = await apiCall('https://sailingloc-back-lilac.vercel.app/api/payment/confirm', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: getAuthHeaders(token),
           body: JSON.stringify({ session_id })
         });
 

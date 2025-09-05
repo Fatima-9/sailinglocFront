@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Anchor, BarChart3, Settings, LogOut, Plus, Edit, Trash2, Eye, X } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -128,14 +129,13 @@ export default function AdminDashboard() {
       
       const token = localStorage.getItem('token');
       if (token) {
-        fetch(`http://localhost:3001/api/auth/dashboard?${params}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        console.log('🔄 Récupération des utilisateurs depuis MongoDB...');
+        
+        apiCall(`${API_ENDPOINTS.DASHBOARD}?${params}`, {
+          headers: getAuthHeaders(token)
         })
-        .then(response => response.json())
         .then(data => {
+          console.log('✅ Utilisateurs récupérés depuis MongoDB:', data);
           setUsers(data.allUsers.map(user => ({
             id: user._id,
             nom: user.nom,
@@ -191,65 +191,38 @@ export default function AdminDashboard() {
       
       // Debug: afficher les paramètres envoyés
 
-      const response = await fetch(`http://localhost:3001/api/auth/dashboard?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des données du dashboard depuis MongoDB...');
+      
+      const data = await apiCall(`${API_ENDPOINTS.DASHBOARD}?${params}`, {
+        headers: getAuthHeaders(token)
       });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Accès non autorisé');
-          window.location.href = '/connexion';
-          return;
-        }
-        throw new Error('Erreur lors de la récupération des données');
-      }
-
-      const data = await response.json();
       
       // Debug: afficher la réponse de l'API
       
       // Récupérer les vraies données des bateaux
       let boatsData = [];
       try {
-        const boatsResponse = await fetch('http://localhost:3001/api/boats', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        console.log('🔄 Récupération des bateaux depuis MongoDB...');
+        const boatsResult = await apiCall(API_ENDPOINTS.BOATS, {
+          headers: getAuthHeaders(token)
         });
-
-        if (boatsResponse.ok) {
-          const boatsResult = await boatsResponse.json();
-          boatsData = boatsResult || []; // L'API retourne directement le tableau
-        } else {
-          // Erreur API bateaux
-        }
+        boatsData = boatsResult || [];
+        console.log(`✅ ${boatsData.length} bateaux récupérés depuis MongoDB`);
       } catch (error) {
-        // API des bateaux non disponible
+        console.log('❌ Erreur API bateaux:', error.message);
       }
 
       // Récupérer les vraies données des réservations
       let bookingsData = [];
       try {
-        const bookingsResponse = await fetch('http://localhost:3001/api/bookings?limit=1000', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        console.log('🔄 Récupération des réservations depuis MongoDB...');
+        const bookingsResult = await apiCall(`${API_ENDPOINTS.BOOKINGS}?limit=1000`, {
+          headers: getAuthHeaders(token)
         });
-
-        if (bookingsResponse.ok) {
-          const bookingsResult = await bookingsResponse.json();
-          bookingsData = bookingsResult.data || [];
-          console.log(`Récupération de ${bookingsData.length} réservations depuis la base de données`);
-        } else {
-          console.log('Erreur API réservations:', bookingsResponse.status, bookingsResponse.statusText);
-        }
+        bookingsData = bookingsResult.data || [];
+        console.log(`✅ ${bookingsData.length} réservations récupérées depuis MongoDB`);
       } catch (error) {
-        console.log('API des réservations non disponible:', error.message);
+        console.log('❌ Erreur API réservations:', error.message);
       }
 
       // Récupérer les avis pour chaque bateau
@@ -258,30 +231,17 @@ export default function AdminDashboard() {
       
       for (const boat of boatsData) {
         try {
-          const reviewsResponse = await fetch(`http://localhost:3001/api/reviews/boat/${boat._id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
+          const reviewsResult = await apiCall(API_ENDPOINTS.BOAT_REVIEWS(boat._id), {
+            headers: getAuthHeaders(token)
           });
-
-          if (reviewsResponse.ok) {
-            const reviewsResult = await reviewsResponse.json();
-            const reviews = reviewsResult.data || [];
-            totalReviews += reviews.length;
-            
-            boatsWithReviews.push({
-              ...boat,
-              reviews: reviews,
-              reviewCount: reviews.length
-            });
-          } else {
-            boatsWithReviews.push({
-              ...boat,
-              reviews: [],
-              reviewCount: 0
-            });
-          }
+          const reviews = reviewsResult.data || [];
+          totalReviews += reviews.length;
+          
+          boatsWithReviews.push({
+            ...boat,
+            reviews: reviews,
+            reviewCount: reviews.length
+          });
         } catch (error) {
           console.log(`Erreur lors de la récupération des avis pour ${boat.nom}:`, error.message);
           boatsWithReviews.push({
@@ -374,17 +334,13 @@ export default function AdminDashboard() {
         status: boatsStatusFilter
       });
 
-      const response = await fetch(`http://localhost:3001/api/auth/boats?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des bateaux depuis MongoDB...');
+      
+      const data = await apiCall(`${API_ENDPOINTS.BOATS}?${params}`, {
+        headers: getAuthHeaders(token)
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        setBoats(data.boats.map(boat => ({
+      
+      setBoats(data.boats.map(boat => ({
           id: boat._id,
           nom: boat.nom,
           type: boat.type,
@@ -437,14 +393,13 @@ export default function AdminDashboard() {
     // Appeler directement l'API avec la nouvelle page
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(`http://localhost:3001/api/auth/dashboard?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des utilisateurs depuis MongoDB...');
+      
+      apiCall(`${API_ENDPOINTS.DASHBOARD}?${params}`, {
+        headers: getAuthHeaders(token)
       })
-      .then(response => response.json())
       .then(data => {
+        console.log('✅ Utilisateurs récupérés depuis MongoDB:', data);
         setUsers(data.allUsers.map(user => ({
           id: user._id,
           nom: user.nom,
@@ -488,14 +443,13 @@ export default function AdminDashboard() {
     // Appeler directement l'API avec les nouveaux filtres
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(`http://localhost:3001/api/auth/dashboard?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des utilisateurs depuis MongoDB...');
+      
+      apiCall(`${API_ENDPOINTS.DASHBOARD}?${params}`, {
+        headers: getAuthHeaders(token)
       })
-      .then(response => response.json())
       .then(data => {
+        console.log('✅ Utilisateurs récupérés depuis MongoDB:', data);
         setUsers(data.allUsers.map(user => ({
           id: user._id,
           nom: user.nom,
@@ -562,14 +516,13 @@ export default function AdminDashboard() {
     // Appeler directement l'API avec les paramètres par défaut
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(`http://localhost:3001/api/auth/dashboard?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des utilisateurs depuis MongoDB...');
+      
+      apiCall(`${API_ENDPOINTS.DASHBOARD}?${params}`, {
+        headers: getAuthHeaders(token)
       })
-      .then(response => response.json())
       .then(data => {
+        console.log('✅ Utilisateurs récupérés depuis MongoDB:', data);
         setUsers(data.allUsers.map(user => ({
           id: user._id,
           nom: user.nom,
@@ -604,18 +557,14 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await fetch(`http://localhost:3001/api/auth/users/${userId}`, {
+        console.log('🔄 Suppression de l\'utilisateur depuis MongoDB...');
+        
+        await apiCall(`${API_ENDPOINTS.USERS}/${userId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getAuthHeaders(token)
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur lors de la suppression');
-        }
+        
+        console.log('✅ Utilisateur supprimé avec succès');
 
         // Supprimer l'utilisateur de la liste locale
         setUsers(users.filter(user => user.id !== userId));
@@ -693,12 +642,11 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      console.log('🔄 Création de l\'utilisateur dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.REGISTER, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           nom: addFormData.nom,
           prenom: addFormData.prenom,
@@ -715,13 +663,8 @@ export default function AdminDashboard() {
           })
         })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la création');
-      }
-
-      const data = await response.json();
+      
+      console.log('✅ Utilisateur créé avec succès:', data);
       
              // Ajouter le nouvel utilisateur à la liste locale
        const newUser = {
@@ -772,26 +715,20 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/api/auth/users/${editingUser.id}`, {
+      console.log('🔄 Modification de l\'utilisateur dans MongoDB...');
+      
+      await apiCall(`${API_ENDPOINTS.USERS}/${editingUser.id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify(editFormData)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la modification');
-      }
-
-      const data = await response.json();
+      
+      console.log('✅ Utilisateur modifié avec succès');
       
       // Mettre à jour l'utilisateur dans la liste locale
       setUsers(users.map(user => 
         user.id === editingUser.id 
-          ? { ...user, ...data.user }
+          ? { ...user, ...editFormData }
           : user
       ));
 
@@ -816,18 +753,14 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await fetch(`http://localhost:3001/api/boats/${boatId}`, {
+        console.log('🔄 Suppression du bateau depuis MongoDB...');
+        
+        await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatId), {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getAuthHeaders(token)
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur lors de la suppression');
-        }
+        
+        console.log('✅ Bateau supprimé avec succès');
 
         // Supprimer le bateau de la liste locale
       setBoats(boats.filter(boat => boat.id !== boatId));
@@ -866,26 +799,20 @@ export default function AdminDashboard() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/api/boats/${editingBoat.id}`, {
+      console.log('🔄 Modification du bateau dans MongoDB...');
+      
+      await apiCall(API_ENDPOINTS.BOAT_DETAIL(editingBoat.id), {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify(editBoatFormData)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la modification');
-      }
-
-      const data = await response.json();
+      
+      console.log('✅ Bateau modifié avec succès');
       
       // Mettre à jour le bateau dans la liste locale
       setBoats(boats.map(boat => 
         boat.id === editingBoat.id 
-          ? { ...boat, ...data }
+          ? { ...boat, ...editBoatFormData }
           : boat
       ));
 
@@ -910,18 +837,14 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await fetch(`http://localhost:3001/api/reviews/${reviewId}`, {
+        console.log('🔄 Suppression de l\'avis depuis MongoDB...');
+        
+        await apiCall(`${API_ENDPOINTS.REVIEWS}/${reviewId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: getAuthHeaders(token)
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur lors de la suppression');
-        }
+        
+        console.log('✅ Avis supprimé avec succès');
 
         // Supprimer l'avis de la liste locale
         setReviews(reviews.filter(review => review.id !== reviewId));
@@ -955,18 +878,15 @@ export default function AdminDashboard() {
 
       console.log('Appel API avis avec paramètres:', params.toString());
 
-      const response = await fetch(`http://localhost:3001/api/reviews?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des avis depuis MongoDB...');
+      
+      const data = await apiCall(`${API_ENDPOINTS.REVIEWS}?${params}`, {
+        headers: getAuthHeaders(token)
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Réponse API avis:', data);
-        
-        setReviews(data.reviews.map(review => ({
+      
+      console.log('✅ Avis récupérés depuis MongoDB:', data);
+      
+      setReviews(data.reviews.map(review => ({
           id: review._id,
           userId: review.userId,
           boatId: review.boatId,
@@ -1026,14 +946,13 @@ export default function AdminDashboard() {
     // Appeler directement l'API avec les paramètres par défaut
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(`http://localhost:3001/api/reviews?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('🔄 Récupération des avis depuis MongoDB...');
+      
+      apiCall(`${API_ENDPOINTS.REVIEWS}?${params}`, {
+        headers: getAuthHeaders(token)
       })
-      .then(response => response.json())
       .then(data => {
+        console.log('✅ Avis récupérés depuis MongoDB:', data);
         setReviews(data.reviews.map(review => ({
           id: review._id,
           userId: review.userId,

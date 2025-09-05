@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, X, Upload, MapPin, Ship, Users, Euro, Ruler, Settings, Plus, Calendar } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 import BoatAvailability from './BoatAvailability';
 
 export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
@@ -88,30 +89,14 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
     try {
       console.log('🔄 Chargement des disponibilités pour le bateau:', boatId);
       
-      const response = await fetch(`http://localhost:3001/api/boats/${boatId}/availability`);
+      console.log('🔄 Chargement des disponibilités depuis MongoDB...');
       
-      console.log('📡 Réponse du serveur:', response.status, response.statusText);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Disponibilités chargées:', data);
+      try {
+        const data = await apiCall(`${API_ENDPOINTS.BOAT_DETAIL(boatId)}/availability`);
+        console.log('✅ Disponibilités chargées depuis MongoDB:', data);
         setAvailabilityPeriods(data);
-      } else {
-        console.error('❌ Erreur lors du chargement des disponibilités:', response.status, response.statusText);
-        
-        if (response.status === 404) {
-          console.error('Bateau non trouvé');
-        } else if (response.status === 500) {
-          console.error('Erreur serveur');
-        }
-        
-        // Essayer de récupérer le message d'erreur
-        try {
-          const errorData = await response.json();
-          console.error('Détails de l\'erreur:', errorData);
-        } catch (e) {
-          console.error('Impossible de lire le message d\'erreur');
-        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des disponibilités:', error.message);
       }
     } catch (error) {
       console.error('❌ Erreur lors du chargement des disponibilités:', error);
@@ -229,31 +214,18 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
       }
 
       // Mettre à jour le bateau
-      const response = await fetch(`http://localhost:3001/api/boats/${boatData._id}`, {
+      console.log('🔄 Modification du bateau dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatData._id), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(boatDataToUpdate),
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(boatDataToUpdate)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          throw new Error('Vous devez être connecté pour modifier ce bateau');
-        } else if (response.status === 403) {
-          throw new Error('Vous n\'avez pas les permissions pour modifier ce bateau');
-        } else {
-          throw new Error(errorData.message || 'Erreur lors de la modification du bateau');
-        }
-      }
-
-      const updatedBoat = await response.json();
-
+      
+      console.log('✅ Bateau modifié avec succès:', data);
+      
       // Les disponibilités sont maintenant incluses directement dans la mise à jour du bateau
-      console.log('✅ Bateau mis à jour avec succès:', updatedBoat);
-      console.log('📋 Disponibilités mises à jour:', updatedBoat.availability);
+      console.log('📋 Disponibilités mises à jour:', data.availability);
 
       setSuccess('Bateau modifié avec succès !');
       

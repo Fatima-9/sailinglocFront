@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle, X } from 'lucide-react';
+import { API_ENDPOINTS, apiCall } from '../config/api';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -62,11 +63,10 @@ export default function Contact() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:3001/api/contact', {
+      console.log('🔄 Envoi du message de contact...');
+      
+      await apiCall(API_ENDPOINTS.CONTACT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           nom: formData.nom,
           prenom: formData.prenom,
@@ -75,8 +75,8 @@ export default function Contact() {
           email: formData.email
         })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Erreur lors de l\'envoi du message.');
+      
+      console.log('✅ Message envoyé avec succès');
       
       // Afficher le message de succès moderne
       setShowSuccess(true);

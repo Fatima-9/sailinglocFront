@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Loader2, CreditCard } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function Payment() {
   const location = useLocation();
@@ -29,12 +30,11 @@ export default function Payment() {
         throw new Error('Paramètres de réservation manquants.');
       }
 
-      const res = await fetch('http://localhost:3001/api/payment/create-checkout-session', {
+      console.log('🔄 Création de la session de paiement...');
+      
+      const res = await apiCall('https://sailingloc-back-lilac.vercel.app/api/payment/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           boatId,
           startDate,

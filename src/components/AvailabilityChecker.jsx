@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
 import AlertPopup from './AlertPopup';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 const AvailabilityChecker = ({ boatId, selectedStartDate, selectedEndDate, onAvailabilityChange }) => {
   const [availabilityPeriods, setAvailabilityPeriods] = useState([]);
@@ -39,18 +40,22 @@ const AvailabilityChecker = ({ boatId, selectedStartDate, selectedEndDate, onAva
     setLoading(true);
     try {
       // Charger les périodes de disponibilité
-      const availabilityResponse = await fetch(`http://localhost:3001/api/boats/${boatId}/availability`);
-      if (availabilityResponse.ok) {
-        const availabilityData = await availabilityResponse.json();
+      console.log('🔄 Chargement des disponibilités depuis MongoDB...');
+      try {
+        const availabilityData = await apiCall(`${API_ENDPOINTS.BOAT_DETAIL(boatId)}/availability`);
         setAvailabilityPeriods(availabilityData);
+        console.log('✅ Disponibilités chargées:', availabilityData);
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des disponibilités:', error.message);
       }
 
       // Charger les réservations existantes
-      const bookingsResponse = await fetch(`http://localhost:3001/api/bookings/boat/${boatId}`);
-      if (bookingsResponse.ok) {
-        const bookingsData = await bookingsResponse.json();
+      console.log('🔄 Chargement des réservations depuis MongoDB...');
+      try {
+        const bookingsData = await apiCall(`${API_ENDPOINTS.BOOKINGS}/boat/${boatId}`);
         if (bookingsData.success) {
           setExistingBookings(bookingsData.data);
+          console.log('✅ Réservations chargées:', bookingsData.data);
         }
       }
     } catch (error) {

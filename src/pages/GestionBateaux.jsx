@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, Pencil, Plus, X, Image as ImageIcon, Ship, MapPin, Euro, Users, Ruler } from 'lucide-react';
 import AddBoat from '../components/AddBoat';
 import EditBoat from '../components/EditBoat';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function GestionBateaux() {
   const [boats, setBoats] = useState([]);
@@ -26,17 +27,13 @@ export default function GestionBateaux() {
         return;
       }
 
-      const response = await fetch('http://localhost:3001/api/boats/my-boats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      console.log('🔄 Récupération des bateaux depuis MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.MY_BOATS, {
+        headers: getAuthHeaders(token)
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des bateaux');
-      }
-
-      const data = await response.json();
+      
+      console.log('✅ Bateaux récupérés:', data);
       setBoats(data);
     } catch (error) {
       setError(error.message);
@@ -52,16 +49,14 @@ export default function GestionBateaux() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/boats/${id}`, {
+      console.log('🔄 Suppression du bateau depuis MongoDB...');
+      
+      await apiCall(API_ENDPOINTS.BOAT_DETAIL(id), {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: getAuthHeaders(token)
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la suppression');
-      }
+      
+      console.log('✅ Bateau supprimé avec succès');
 
       // Mettre à jour la liste locale
       setBoats(boats.filter(b => b._id !== id));

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, X, Check, AlertTriangle, Pencil } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 const BoatAvailability = ({ boatId, existingPeriods = [], onAvailabilityChange, isEditing = false }) => {
   const [availabilityPeriods, setAvailabilityPeriods] = useState(existingPeriods);
@@ -29,30 +30,14 @@ const BoatAvailability = ({ boatId, existingPeriods = [], onAvailabilityChange, 
     try {
       console.log('🔄 Chargement des disponibilités pour le bateau:', boatId);
       
-      const response = await fetch(`http://localhost:3001/api/boats/${boatId}/availability`);
+      console.log('🔄 Chargement des disponibilités depuis MongoDB...');
       
-      console.log('📡 Réponse du serveur:', response.status, response.statusText);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Disponibilités chargées:', data);
+      try {
+        const data = await apiCall(`${API_ENDPOINTS.BOAT_DETAIL(boatId)}/availability`);
+        console.log('✅ Disponibilités chargées depuis MongoDB:', data);
         setAvailabilityPeriods(data);
-      } else {
-        console.error('❌ Erreur lors du chargement des disponibilités:', response.status, response.statusText);
-        
-        if (response.status === 404) {
-          console.error('Bateau non trouvé');
-        } else if (response.status === 500) {
-          console.error('Erreur serveur');
-        }
-        
-        // Essayer de récupérer le message d'erreur
-        try {
-          const errorData = await response.json();
-          console.error('Détails de l\'erreur:', errorData);
-        } catch (e) {
-          console.error('Impossible de lire le message d\'erreur');
-        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des disponibilités:', error.message);
       }
     } catch (error) {
       console.error('❌ Erreur lors du chargement des disponibilités:', error);
@@ -106,18 +91,18 @@ const BoatAvailability = ({ boatId, existingPeriods = [], onAvailabilityChange, 
   const handleDeletePeriod = async (periodId) => {
     try {
       if (boatId) {
-        const response = await fetch(`http://localhost:3001/api/boats/${boatId}/availability/${periodId}`, {
+        console.log('🔄 Suppression de la disponibilité depuis MongoDB...');
+        
+        await apiCall(`${API_ENDPOINTS.BOAT_DETAIL(boatId)}/availability/${periodId}`, {
           method: 'DELETE'
         });
-
-        if (response.ok) {
-          const updatedPeriods = availabilityPeriods.filter(period => period.id !== periodId && period._id !== periodId);
-          setAvailabilityPeriods(updatedPeriods);
-          
-          // Notifier le composant parent
-          if (onAvailabilityChange) {
-            onAvailabilityChange(updatedPeriods);
-          }
+        
+        const updatedPeriods = availabilityPeriods.filter(period => period.id !== periodId && period._id !== periodId);
+        setAvailabilityPeriods(updatedPeriods);
+        
+        // Notifier le composant parent
+        if (onAvailabilityChange) {
+          onAvailabilityChange(updatedPeriods);
         }
       } else {
         // Si pas de boatId (bateau pas encore créé), supprimer localement

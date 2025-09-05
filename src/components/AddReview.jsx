@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Star, MessageSquare, Send, X } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bookingId }) {
   const [formData, setFormData] = useState({
@@ -49,12 +50,11 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
         throw new Error('Vous devez être connecté');
       }
 
-      const response = await fetch('http://localhost:3001/api/reviews', {
+      console.log('🔄 Ajout de l\'avis dans MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.REVIEWS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           boatId: boatData._id,
           bookingId: bookingId,
@@ -62,12 +62,8 @@ export default function AddReview({ isOpen, onClose, onReviewAdded, boatData, bo
           comment: formData.comment.trim()
         })
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de l\'ajout de l\'avis');
-      }
+      
+      console.log('✅ Avis ajouté avec succès:', data);
 
       setSuccess('Avis ajouté avec succès !');
       

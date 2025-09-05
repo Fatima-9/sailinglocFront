@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Trash2, AlertTriangle, AlertCircle, Loader2 } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function Profil() {
   const navigate = useNavigate();
@@ -58,7 +59,9 @@ export default function Profil() {
     setMessage('');
     try {
       const userId = localStorage.getItem('userId');
-      const response = await fetch('http://localhost:3001/api/user/update', {
+      console.log('🔄 Mise à jour du profil dans MongoDB...');
+      
+      await apiCall('https://sailingloc-back-lilac.vercel.app/api/user/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,19 +118,17 @@ export default function Profil() {
         throw new Error('Vous devez être connecté');
       }
 
-      const response = await fetch('http://localhost:3001/api/user/delete-account', {
+      console.log('🔄 Suppression du compte depuis MongoDB...');
+      
+      await apiCall('https://sailingloc-back-lilac.vercel.app/api/user/delete-account', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de la suppression du compte');
-      }
+      
+      console.log('✅ Compte supprimé avec succès');
 
       // Supprimer toutes les données du localStorage
       localStorage.clear();

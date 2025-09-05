@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, User, Ship, Calendar, Euro } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 const OwnerBookingManager = () => {
   const [bookings, setBookings] = useState([]);
@@ -21,17 +22,13 @@ const OwnerBookingManager = () => {
         throw new Error('Token d\'authentification manquant');
       }
       
-      const response = await fetch('http://localhost:3001/api/bookings/owner', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
+      console.log('🔄 Récupération des réservations du propriétaire depuis MongoDB...');
       
-      if (!response.ok) {
-        throw new Error(data.message || `Erreur ${response.status}: ${response.statusText}`);
-      }
+      const data = await apiCall(`${API_ENDPOINTS.BOOKINGS}/owner`, {
+        headers: getAuthHeaders(token)
+      });
+      
+      console.log('✅ Réservations du propriétaire récupérées:', data);
 
       if (data.success) {
         setBookings(data.data);
@@ -57,20 +54,15 @@ const OwnerBookingManager = () => {
         throw new Error('Token d\'authentification manquant');
       }
       
-      const response = await fetch(`http://localhost:3001/api/bookings/${bookingId}/owner-action`, {
+      console.log('🔄 Action du propriétaire sur la réservation...');
+      
+      const data = await apiCall(`${API_ENDPOINTS.BOOKINGS}/${bookingId}/owner-action`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({ action })
       });
-
-      const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.message || `Erreur ${response.status}: ${response.statusText}`);
-      }
+      console.log('✅ Action du propriétaire effectuée:', data);
 
       if (data.success) {
         // Recharger les données pour avoir les informations à jour

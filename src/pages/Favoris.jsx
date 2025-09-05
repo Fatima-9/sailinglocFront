@@ -4,6 +4,7 @@ import { Heart, Ship, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BoatCard from '../components/BoatCard';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function Favoris() {
   const [favorites, setFavorites] = useState([]);
@@ -25,17 +26,13 @@ export default function Favoris() {
         return;
       }
 
-      const response = await fetch('http://localhost:3001/api/favorites', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      console.log('🔄 Récupération des favoris depuis MongoDB...');
+      
+      const data = await apiCall(API_ENDPOINTS.FAVORITES, {
+        headers: getAuthHeaders(token)
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des favoris');
-      }
-
-      const data = await response.json();
+      
+      console.log('✅ Favoris récupérés:', data);
       setFavorites(data.data || []);
     } catch (error) {
       setError(error.message);
@@ -48,19 +45,15 @@ export default function Favoris() {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:3001/api/favorites/${boatId}`, {
+      console.log('🔄 Suppression du favori depuis MongoDB...');
+      
+      await apiCall(`${API_ENDPOINTS.FAVORITES}/${boatId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: getAuthHeaders(token)
       });
-
-      if (response.ok) {
-        setFavorites(prev => prev.filter(fav => fav.boatId._id !== boatId));
-        toast.success('Bateau retiré des favoris');
-      } else {
-        throw new Error('Erreur lors de la suppression');
-      }
+      
+      setFavorites(prev => prev.filter(fav => fav.boatId._id !== boatId));
+      toast.success('Bateau retiré des favoris');
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la suppression du favori');
     }

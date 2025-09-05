@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 import { toast } from 'react-toastify';
 
 export default function HeartButton({ boatId, className = "" }) {
@@ -15,16 +16,11 @@ export default function HeartButton({ boatId, className = "" }) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(`http://localhost:3001/api/favorites/check/${boatId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const data = await apiCall(`${API_ENDPOINTS.FAVORITES}/check/${boatId}`, {
+        headers: getAuthHeaders(token)
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsFavorite(data.isFavorite);
-      }
+      
+      setIsFavorite(data.isFavorite);
     } catch (error) {
       console.error('Erreur vérification favori:', error);
     }
@@ -42,37 +38,23 @@ export default function HeartButton({ boatId, className = "" }) {
 
       if (isFavorite) {
         // Supprimer des favoris
-        const response = await fetch(`http://localhost:3001/api/favorites/${boatId}`, {
+        await apiCall(`${API_ENDPOINTS.FAVORITES}/${boatId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: getAuthHeaders(token)
         });
-
-        if (response.ok) {
-          setIsFavorite(false);
-          toast.success('Bateau retiré des favoris');
-        } else {
-          throw new Error('Erreur lors de la suppression');
-        }
+        
+        setIsFavorite(false);
+        toast.success('Bateau retiré des favoris');
       } else {
         // Ajouter aux favoris
-        const response = await fetch('http://localhost:3001/api/favorites', {
+        await apiCall(API_ENDPOINTS.FAVORITES, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: getAuthHeaders(token),
           body: JSON.stringify({ boatId })
         });
-
-        if (response.ok) {
-          setIsFavorite(true);
-          toast.success('Bateau ajouté aux favoris !');
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur lors de l\'ajout');
-        }
+        
+        setIsFavorite(true);
+        toast.success('Bateau ajouté aux favoris !');
       }
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la gestion des favoris');

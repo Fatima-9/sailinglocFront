@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 
 export default function PaymentCancel() {
   const [searchParams] = useSearchParams();
@@ -22,9 +23,11 @@ export default function PaymentCancel() {
           return;
         }
 
-        const res = await fetch(`http://localhost:3001/api/bookings/${bookingId}/cancel`, {
+        console.log('🔄 Annulation de la réservation...');
+        
+        const res = await apiCall(`${API_ENDPOINTS.BOOKINGS}/${bookingId}/cancel`, {
           method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: getAuthHeaders(token)
         });
 
         if (!res.ok) {

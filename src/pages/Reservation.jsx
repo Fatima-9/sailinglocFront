@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Users, Euro, MapPin, Ship, Loader2, CheckCircle } from 'lucide-react';
+import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
 import BoatCalendar from '../components/BoatCalendar';
 import BookingConflictChecker from '../components/BookingConflictChecker';
 import AlertPopup from '../components/AlertPopup';
@@ -65,26 +66,27 @@ export default function Reservation() {
   const fetchBoatDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/boats/${boatId}`);
+      console.log('🔄 Récupération des détails du bateau depuis MongoDB...');
       
-      if (!response.ok) {
-        throw new Error('Bateau non trouvé');
-      }
-
-      const data = await response.json();
+      const data = await apiCall(API_ENDPOINTS.BOAT_DETAIL(boatId));
+      console.log('✅ Détails du bateau récupérés:', data);
+      
       setBoat(data);
       
       // Récupérer les réservations existantes depuis la nouvelle route
-      const bookingsResponse = await fetch(`http://localhost:3001/api/bookings/boat/${boatId}`);
-      if (bookingsResponse.ok) {
-        const bookingsData = await bookingsResponse.json();
+      console.log('🔄 Récupération des réservations existantes depuis MongoDB...');
+      try {
+        const bookingsData = await apiCall(`${API_ENDPOINTS.BOOKINGS}/boat/${boatId}`);
         if (bookingsData.success) {
           setExistingBookings(bookingsData.data);
-          console.log('Réservations existantes chargées:', bookingsData.data);
+          console.log('✅ Réservations existantes chargées:', bookingsData.data);
         }
+      } catch (bookingsError) {
+        console.log('⚠️ Erreur lors de la récupération des réservations:', bookingsError.message);
       }
     } catch (error) {
-      setError(error.message);
+      setError('Bateau non trouvé: ' + error.message);
+      console.error('❌ Erreur lors de la récupération des détails:', error);
     } finally {
       setLoading(false);
     }
@@ -208,12 +210,11 @@ export default function Reservation() {
       }
 
       // Démarrer un paiement Stripe Checkout et rediriger
-      const response = await fetch('http://localhost:3001/api/payment/create-checkout-session', {
+      console.log('🔄 Création de la session de paiement...');
+      
+      const response = await apiCall('https://sailingloc-back-lilac.vercel.app/api/payment/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           boatId: boatId,
           startDate: reservationData.startDate,

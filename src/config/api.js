@@ -25,6 +25,9 @@ export const API_ENDPOINTS = {
   
   // Contact
   CONTACT: `${API_BASE_URL}/api/contact`,
+  
+  // Favoris
+  FAVORITES: `${API_BASE_URL}/api/favorites`,
 };
 
 // Configuration des headers par défaut
