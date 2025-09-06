@@ -35,7 +35,7 @@ export default function About() {
         ></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-8">
-            À propos
+            À propos.
           </h1>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
             Une question ? Écrivez-nous, nous vous répondons rapidement !
