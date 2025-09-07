@@ -101,6 +101,7 @@ export default function GestionBateaux() {
 
   // Vérifier si l'utilisateur est connecté
   const isAuthenticated = !!localStorage.getItem('token');
+  const userRole = localStorage.getItem('userRole');
 
   if (loading) {
     return (
@@ -123,6 +124,29 @@ export default function GestionBateaux() {
             Se connecter
           </button>
         </Link>
+      </div>
+    );
+  }
+
+  // Vérifier si l'utilisateur est propriétaire
+  if (userRole !== 'proprietaire') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Accès refusé</h2>
+        <p className="text-lg text-gray-800 mb-6">Vous devez être propriétaire pour accéder à la gestion des bateaux</p>
+        <div className="flex space-x-3">
+          <Link to="/bateaux">
+            <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              Voir les bateaux
+            </button>
+          </Link>
+          <Link to="/inscription">
+            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              Inscription
+            </button>
+          </Link>
+        </div>
       </div>
     );
   }
