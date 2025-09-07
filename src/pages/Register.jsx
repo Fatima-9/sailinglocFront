@@ -138,7 +138,33 @@ export default function Register() {
       });
       
       console.log('✅ Utilisateur créé avec succès:', data);
+      
+      // Sauvegarder toutes les données utilisateur dans le localStorage
       localStorage.setItem('userNom', data.user.nom);
+      localStorage.setItem('userPrenom', data.user.prenom);
+      localStorage.setItem('userEmail', data.user.email);
+      localStorage.setItem('userTel', data.user.telephone);
+      localStorage.setItem('userRole', data.user.role);
+      localStorage.setItem('userId', data.user._id);
+      localStorage.setItem('token', data.token);
+      
+      // Sauvegarder les données professionnelles si c'est un propriétaire professionnel
+      if (data.user.role === 'proprietaire' && data.user.siret) {
+        localStorage.setItem('userSiret', data.user.siret);
+      }
+      if (data.user.role === 'proprietaire' && data.user.siren) {
+        localStorage.setItem('userSiren', data.user.siren);
+      }
+      
+      console.log('💾 Données sauvegardées dans localStorage:', {
+        nom: data.user.nom,
+        prenom: data.user.prenom,
+        email: data.user.email,
+        telephone: data.user.telephone,
+        role: data.user.role,
+        siret: data.user.siret,
+        siren: data.user.siren
+      });
       toast.success(
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ fontSize: 22, marginRight: 10 }}>✅</span>

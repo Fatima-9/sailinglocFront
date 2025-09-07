@@ -14,14 +14,24 @@ export default function Profil() {
   const [error, setError] = useState('');
   
   // Préremplir depuis le localStorage si dispo (sinon vide)
-  const [formData, setFormData] = useState({
-    nom: localStorage.getItem('userNom') || '',
-    prenom: localStorage.getItem('userPrenom') || '',
-    email: localStorage.getItem('userEmail') || '',
-    telephone: localStorage.getItem('userTel') || '',
-    password: '',
-    siret: localStorage.getItem('userSiret') || '',
-    siren: localStorage.getItem('userSiren') || ''
+  const [formData, setFormData] = useState(() => {
+    const siret = localStorage.getItem('userSiret') || '';
+    const siren = localStorage.getItem('userSiren') || '';
+    
+    console.log('🔍 Chargement initial du profil:');
+    console.log('📋 SIRET depuis localStorage:', siret);
+    console.log('📋 SIREN depuis localStorage:', siren);
+    console.log('📋 Toutes les clés localStorage:', Object.keys(localStorage));
+    
+    return {
+      nom: localStorage.getItem('userNom') || '',
+      prenom: localStorage.getItem('userPrenom') || '',
+      email: localStorage.getItem('userEmail') || '',
+      telephone: localStorage.getItem('userTel') || '',
+      password: '',
+      siret: siret,
+      siren: siren
+    };
   });
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +40,22 @@ export default function Profil() {
 
   useEffect(() => {
     checkAuthentication();
+  }, []);
+
+  // Recharger les données depuis localStorage à chaque ouverture de la page
+  useEffect(() => {
+    const siret = localStorage.getItem('userSiret') || '';
+    const siren = localStorage.getItem('userSiren') || '';
+    
+    console.log('🔄 Rechargement des données SIRET/SIREN:');
+    console.log('📋 SIRET:', siret);
+    console.log('📋 SIREN:', siren);
+    
+    setFormData(prev => ({
+      ...prev,
+      siret: siret,
+      siren: siren
+    }));
   }, []);
 
   const checkAuthentication = () => {
@@ -84,6 +110,17 @@ export default function Profil() {
       localStorage.setItem('userTel', data.user.tel);
       if (data.user.siret) localStorage.setItem('userSiret', data.user.siret);
       if (data.user.siren) localStorage.setItem('userSiren', data.user.siren);
+
+      // Mettre à jour le formulaire avec les nouvelles données
+      setFormData({
+        nom: data.user.nom || '',
+        prenom: data.user.prenom || '',
+        email: data.user.email || '',
+        telephone: data.user.tel || '',
+        password: '', // Ne pas afficher le mot de passe
+        siret: data.user.siret || '',
+        siren: data.user.siren || ''
+      });
       toast.success(
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ fontSize: 22, marginRight: 10 }}>✅</span>
@@ -270,7 +307,9 @@ export default function Profil() {
             {localStorage.getItem('userRole') === 'proprietaire' && (
               <>
                 <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">SIRET</label>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
+                    SIRET
+                  </label>
                   <input
                     type="text"
                     name="siret"
@@ -284,7 +323,9 @@ export default function Profil() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">SIREN</label>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
+                    SIREN
+                  </label>
                   <input
                     type="text"
                     name="siren"
