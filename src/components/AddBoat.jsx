@@ -129,6 +129,30 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
         imageUrl = await getDownloadURL(snapshot.ref);
       }
 
+      // Convertir la destination au format attendu par l'API
+      const convertDestinationForAPI = (dest) => {
+        const destinationMap = {
+          'Saint-malo': 'saint-malo',
+          'Les Glénan': 'les-glenan',
+          'Crozon': 'crozon',
+          'La Rochelle': 'la-rochelle',
+          'Marseille': 'marseille',
+          'Cannes': 'cannes',
+          'Ajaccio': 'ajaccio',
+          'Barcelone': 'barcelone',
+          'Palma de Majorque': 'palma',
+          'Athènes': 'athenes',
+          'Venise': 'venise',
+          'Amsterdam': 'amsterdam',
+          'Split': 'split'
+        };
+        
+        return destinationMap[dest] || dest;
+      };
+
+      const apiDestination = convertDestinationForAPI(formData.destination);
+      console.log('🔄 Destination convertie pour l\'API:', apiDestination);
+
       // Préparer les données du bateau
       const boatData = {
         nom: formData.nom,
@@ -137,7 +161,7 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
         prix_jour: parseFloat(formData.prix_jour),
         capacite: parseInt(formData.capacite),
         image: imageUrl,
-        destination: formData.destination,
+        destination: apiDestination,
         description: formData.description,
         equipements: formData.equipements,
         // Inclure une seule disponibilité si elle existe (sans prix)
@@ -340,15 +364,28 @@ export default function AddBoat({ isOpen, onClose, onBoatAdded }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Destination *
                 </label>
-                <input
-                  type="text"
+                <select
                   name="destination"
                   value={formData.destination}
                   onChange={handleInputChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Port d'attache"
-                />
+                >
+                  <option value="">Sélectionner une destination</option>
+                  <option value="Saint-malo">Saint-Malo</option>
+                  <option value="Les Glénan">Les Glénan</option>
+                  <option value="Crozon">Crozon</option>
+                  <option value="La Rochelle">La Rochelle</option>
+                  <option value="Marseille">Marseille</option>
+                  <option value="Cannes">Cannes</option>
+                  <option value="Ajaccio">Ajaccio</option>
+                  <option value="Barcelone">Barcelone</option>
+                  <option value="Palma de Majorque">Palma de Majorque</option>
+                  <option value="Athènes">Athènes</option>
+                  <option value="Venise">Venise</option>
+                  <option value="Amsterdam">Amsterdam</option>
+                  <option value="Split">Split</option>
+                </select>
               </div>
             </div>
 

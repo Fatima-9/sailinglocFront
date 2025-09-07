@@ -48,6 +48,51 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
   // Initialiser le formulaire avec les données du bateau quand le composant s'ouvre
   useEffect(() => {
     if (boatData && isOpen) {
+      console.log('🔄 Initialisation du formulaire avec les données du bateau:', boatData);
+      console.log('📍 Destination actuelle du bateau:', boatData.destination);
+      console.log('📍 Type de la destination:', typeof boatData.destination);
+      
+      // Normaliser la destination pour s'assurer qu'elle correspond aux options
+      const normalizeDestination = (dest) => {
+        if (!dest) return '';
+        
+        // Mapping des destinations pour s'assurer de la correspondance
+        const destinationMap = {
+          'saint-malo': 'Saint-malo',
+          'Saint-malo': 'Saint-malo',
+          'les-glenan': 'Les Glénan',
+          'Les Glénan': 'Les Glénan',
+          'crozon': 'Crozon',
+          'Crozon': 'Crozon',
+          'la-rochelle': 'La Rochelle',
+          'La Rochelle': 'La Rochelle',
+          'rochelle': 'La Rochelle',
+          'marseille': 'Marseille',
+          'Marseille': 'Marseille',
+          'cannes': 'Cannes',
+          'Cannes': 'Cannes',
+          'ajaccio': 'Ajaccio',
+          'Ajaccio': 'Ajaccio',
+          'barcelone': 'Barcelone',
+          'Barcelone': 'Barcelone',
+          'palma': 'Palma de Majorque',
+          'Palma de Majorque': 'Palma de Majorque',
+          'athenes': 'Athènes',
+          'Athènes': 'Athènes',
+          'venise': 'Venise',
+          'Venise': 'Venise',
+          'amsterdam': 'Amsterdam',
+          'Amsterdam': 'Amsterdam',
+          'split': 'Split',
+          'Split': 'Split'
+        };
+        
+        return destinationMap[dest] || dest;
+      };
+      
+      const normalizedDestination = normalizeDestination(boatData.destination);
+      console.log('🎯 Destination normalisée:', normalizedDestination);
+      
       setFormData({
         nom: boatData.nom || '',
         type: boatData.type || 'voilier',
@@ -55,7 +100,7 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
         prix_jour: boatData.prix_jour || '',
         capacite: boatData.capacite || '',
         image: boatData.image || '',
-        destination: boatData.destination || '',
+        destination: normalizedDestination,
         description: boatData.description || '',
         equipements: boatData.equipements || []
       });
@@ -182,9 +227,33 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
       }
 
       // Validation des données
-      if (!formData.nom || !formData.type || !formData.longueur || !formData.prix_jour || !formData.capacite) {
+      if (!formData.nom || !formData.type || !formData.longueur || !formData.prix_jour || !formData.capacite || !formData.destination) {
         throw new Error('Veuillez remplir tous les champs obligatoires');
       }
+
+      // Convertir la destination au format attendu par l'API
+      const convertDestinationForAPI = (dest) => {
+        const destinationMap = {
+          'Saint-malo': 'saint-malo',
+          'Les Glénan': 'les-glenan',
+          'Crozon': 'crozon',
+          'La Rochelle': 'la-rochelle',
+          'Marseille': 'marseille',
+          'Cannes': 'cannes',
+          'Ajaccio': 'ajaccio',
+          'Barcelone': 'barcelone',
+          'Palma de Majorque': 'palma',
+          'Athènes': 'athenes',
+          'Venise': 'venise',
+          'Amsterdam': 'amsterdam',
+          'Split': 'split'
+        };
+        
+        return destinationMap[dest] || dest;
+      };
+
+      const apiDestination = convertDestinationForAPI(formData.destination);
+      console.log('🔄 Destination convertie pour l\'API:', apiDestination);
 
       // Préparer les données du bateau
       const boatDataToUpdate = {
@@ -193,7 +262,7 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
         longueur: parseFloat(formData.longueur),
         prix_jour: parseFloat(formData.prix_jour),
         capacite: parseInt(formData.capacite),
-        destination: formData.destination,
+        destination: apiDestination,
         description: formData.description,
         equipements: formData.equipements,
         // Inclure les disponibilités mises à jour
@@ -204,6 +273,10 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
           notes: availabilityPeriods[0].notes || ''
         } : null
       };
+
+      console.log('🔍 Données à envoyer pour la mise à jour:', boatDataToUpdate);
+      console.log('🎯 Destination sélectionnée:', formData.destination);
+      console.log('📤 Destination envoyée à l\'API:', apiDestination);
 
       // Mettre à jour l'image si elle a changé
       if (hasImageChanged && selectedImage) {
@@ -250,7 +323,7 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
 
       // Notifier le composant parent
       if (onBoatUpdated) {
-        onBoatUpdated(updatedBoat);
+        onBoatUpdated(data);
       }
 
       // Fermer le modal après un délai
@@ -424,15 +497,28 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Destination *
                 </label>
-                <input
-                  type="text"
+                <select
                   name="destination"
                   value={formData.destination}
                   onChange={handleInputChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Port d'attache"
-                />
+                >
+                  <option value="">Sélectionner une destination</option>
+                  <option value="Saint-malo">Saint-Malo</option>
+                  <option value="Les Glénan">Les Glénan</option>
+                  <option value="Crozon">Crozon</option>
+                  <option value="La Rochelle">La Rochelle</option>
+                  <option value="Marseille">Marseille</option>
+                  <option value="Cannes">Cannes</option>
+                  <option value="Ajaccio">Ajaccio</option>
+                  <option value="Barcelone">Barcelone</option>
+                  <option value="Palma de Majorque">Palma de Majorque</option>
+                  <option value="Athènes">Athènes</option>
+                  <option value="Venise">Venise</option>
+                  <option value="Amsterdam">Amsterdam</option>
+                  <option value="Split">Split</option>
+                </select>
               </div>
             </div>
 
