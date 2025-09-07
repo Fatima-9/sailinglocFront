@@ -114,7 +114,7 @@ export default function MesReservations() {
       <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto">
           <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Erreur</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Connexion requise</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <Link 
             to="/connexion" 
