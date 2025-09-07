@@ -1,10 +1,58 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import OwnerBookingManager from '../components/OwnerBookingManager';
 
 export default function GestionReservations() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+
+  const checkAuthentication = () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      if (!token) {
+        setError('Vous devez être connecté pour accéder à la gestion de vos réservations');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+    } catch (error) {
+      setError('Erreur lors de la vérification de l\'authentification');
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+        <p className="mt-4 text-gray-600">Chargement...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Connexion requise</h2>
+        <p className="text-lg text-gray-800 mb-6">{error}</p>
+        <Link to="/connexion">
+          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Se connecter
+          </button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">

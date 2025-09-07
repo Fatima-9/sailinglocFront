@@ -145,18 +145,6 @@ export default function Footer() {
 
               <div className="space-y-2 pt-3">
                 <h4 className="font-semibold text-blue-200 text-sm uppercase tracking-wide">
-                  Administration
-                </h4>
-                <Link
-                  to="/admin"
-                  className="block hover:text-blue-300 transition-colors text-sm"
-                >
-                  • Tableau de bord admin
-                </Link>
-              </div>
-
-              <div className="space-y-2 pt-3">
-                <h4 className="font-semibold text-blue-200 text-sm uppercase tracking-wide">
                   Légal
                 </h4>
                 <Link

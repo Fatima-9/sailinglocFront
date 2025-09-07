@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Pencil, Plus, X, Image as ImageIcon, Ship, MapPin, Euro, Users, Ruler } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Trash2, Pencil, Plus, X, Image as ImageIcon, Ship, MapPin, Euro, Users, Ruler, AlertCircle, Loader2 } from 'lucide-react';
 import AddBoat from '../components/AddBoat';
 import EditBoat from '../components/EditBoat';
 import { API_ENDPOINTS, apiCall, getAuthHeaders } from '../config/api';
@@ -23,7 +24,7 @@ export default function GestionBateaux() {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setError('Vous devez être connecté');
+        setError('Vous devez être connecté pour accéder à la gestion de vos bateaux');
         return;
       }
 
@@ -98,13 +99,30 @@ export default function GestionBateaux() {
     setSelectedBoat(null);
   };
 
+  // Vérifier si l'utilisateur est connecté
+  const isAuthenticated = !!localStorage.getItem('token');
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des bateaux...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+        <p className="mt-4 text-gray-600">Chargement...</p>
+      </div>
+    );
+  }
+
+  // Afficher le message d'authentification si l'utilisateur n'est pas connecté
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Connexion requise</h2>
+        <p className="text-lg text-gray-800 mb-6">Vous devez être connecté pour accéder à la gestion de vos bateaux</p>
+        <Link to="/connexion">
+          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Se connecter
+          </button>
+        </Link>
       </div>
     );
   }

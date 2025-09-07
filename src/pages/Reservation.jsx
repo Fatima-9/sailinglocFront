@@ -462,9 +462,6 @@ export default function Reservation() {
                       <div>
                         Au {new Date(boat.availability.endDate).toLocaleDateString('fr-FR')}
                       </div>
-                      <div className="font-medium">
-                        Prix : {boat.availability.price}€ par jour
-                      </div>
                       {boat.availability.notes && (
                         <div className="italic">
                           {boat.availability.notes}
