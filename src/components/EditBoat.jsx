@@ -367,7 +367,6 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
                   <option value="voilier">Voilier</option>
                   <option value="yacht">Yacht</option>
                   <option value="catamaran">Catamaran</option>
-                  <option value="moteur">Bateau à moteur</option>
                 </select>
               </div>
 
@@ -456,7 +455,7 @@ export default function EditBoat({ isOpen, onClose, onBoatUpdated, boatData }) {
             {/* Image */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image du bateau
+                Image du bateau *
               </label>
               <div className="flex items-center space-x-4">
                 <input
