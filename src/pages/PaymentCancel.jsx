@@ -30,9 +30,9 @@ export default function PaymentCancel() {
           headers: getAuthHeaders(token)
         });
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || 'Impossible d’annuler la réservation.');
+        // La fonction apiCall retourne déjà les données JSON parsées
+        if (!res || !res.success) {
+          throw new Error(res?.message || 'Impossible d\'annuler la réservation.');
         }
 
         setInfo('Réservation annulée suite à l’annulation du paiement.');

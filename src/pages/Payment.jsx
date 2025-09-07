@@ -44,12 +44,12 @@ export default function Payment() {
         })
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Échec de l’initiation du paiement.');
+      // La fonction apiCall retourne déjà les données JSON parsées
+      if (!res || !res.url) {
+        throw new Error(res?.message || 'Échec de l\'initiation du paiement.');
       }
 
-      const { url } = await res.json();
+      const { url } = res;
       window.location.href = url;
     } catch (e) {
       setError(e.message);
