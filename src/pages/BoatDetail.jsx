@@ -186,7 +186,7 @@ export default function BoatDetail() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <MapPin size={16} className="text-blue-600" />
-                      <span>Localisation : {boat.localisation}</span>
+                      <span>Destination : {boat.destination}</span>
                     </div>
                   </div>
                 </div>

@@ -30,9 +30,9 @@ export default function PaymentSuccess() {
           body: JSON.stringify({ session_id })
         });
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || 'Échec de la confirmation du paiement.');
+        // La fonction apiCall retourne déjà les données JSON parsées
+        if (!res || !res.success) {
+          throw new Error(res?.message || 'Échec de la confirmation du paiement.');
         }
 
         setMessage('Paiement confirmé ! Votre réservation est en attente de confirmation par le propriétaire.');

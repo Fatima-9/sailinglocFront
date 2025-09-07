@@ -224,12 +224,12 @@ export default function Reservation() {
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de l’initiation du paiement');
+      // La fonction apiCall retourne déjà les données JSON parsées
+      if (!response || !response.url) {
+        throw new Error(response?.message || 'Erreur lors de l\'initiation du paiement');
       }
 
-      const { url } = await response.json();
+      const { url } = response;
       window.location.href = url;
     } catch (error) {
       setError(error.message);
@@ -440,7 +440,7 @@ export default function Reservation() {
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center space-x-2">
                     <MapPin size={16} />
-                    <span>{boat.localisation}</span>
+                    <span>{boat.destination}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Users size={16} />

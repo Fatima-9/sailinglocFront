@@ -10,6 +10,8 @@ import {
   Ship,
   MessageSquare,
   Star,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import SearchFilters from "../components/SearchFilters";
 import SearchResults from "../components/SearchResults";
@@ -35,6 +37,8 @@ export default function Home() {
     type: "",
   });
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   // Récupérer les bateaux et les avis depuis l'API
   useEffect(() => {
@@ -66,7 +70,16 @@ export default function Home() {
 
   const handleSearch = async () => {
     try {
+      // Vérifier que la destination est renseignée
+      if (!searchFilters.destination || searchFilters.destination.trim() === '') {
+        setSearchError('Veuillez renseigner la destination pour effectuer une recherche.');
+        return;
+      }
+
+      // Effacer les erreurs précédentes
+      setSearchError('');
       setIsSearching(true);
+      setHasSearched(true); // Marquer qu'une recherche a été effectuée
 
       // Filtrer les bateaux selon les critères
       let results = boats.filter((boat) => {
@@ -141,6 +154,8 @@ export default function Home() {
       type: "",
     });
     setFilteredBoats([]);
+    setHasSearched(false); // Réinitialiser l'état de recherche
+    setSearchError(''); // Effacer les erreurs
   };
 
   const fetchTopReviews = async () => {
@@ -328,6 +343,35 @@ export default function Home() {
               </div>
             </div>
           </div>
+          
+          {/* Message d'erreur de recherche moderne */}
+          {searchError && (
+            <div className="mt-6 max-w-5xl mx-auto transform transition-all duration-500 ease-out animate-bounce">
+              <div className="bg-gradient-to-r from-red-50 via-red-100 to-red-50 border-l-4 border-red-400 shadow-xl rounded-2xl p-5 flex items-center space-x-4 backdrop-blur-sm">
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    <AlertCircle className="h-7 w-7 text-red-500 animate-pulse" />
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-400 rounded-full animate-ping"></div>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-red-800 font-semibold text-base leading-relaxed">
+                    {searchError}
+                  </p>
+                  <p className="text-red-600 text-sm mt-1">
+                    Sélectionnez une destination dans la liste déroulante ci-dessus
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSearchError('')}
+                  className="flex-shrink-0 p-2 rounded-full hover:bg-red-200 transition-all duration-200 hover:scale-110 active:scale-95"
+                  title="Fermer le message"
+                >
+                  <X className="h-5 w-5 text-red-600" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -390,7 +434,7 @@ export default function Home() {
       </section>
 
       {/* Résultats de recherche */}
-      {filteredBoats.length > 0 && (
+      {hasSearched && (
         <SearchResults
           boats={filteredBoats}
           onReset={resetSearch}
