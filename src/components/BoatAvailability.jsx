@@ -474,8 +474,28 @@ const BoatAvailability = ({ boatId, existingPeriods = [], onAvailabilityChange, 
                     </div>
                   </div>
                 )}
+                
+                {/* Boutons d'édition */}
+                {editingPeriodId === (period.id || period._id) && (
+                  <div className="flex space-x-3 mt-4">
+                    <button
+                      onClick={handleSaveEdit}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Check className="h-4 w-4" />
+                      <span>Sauvegarder</span>
+                    </button>
+                    
+                    <button
+                      onClick={handleCancelEdit}
+                      className="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                    >
+                      <X className="h-4 w-4" />
+                      <span>Annuler</span>
+                    </button>
+                  </div>
+                )}
               </div>
-              
             ))}
           </div>
         </div>
