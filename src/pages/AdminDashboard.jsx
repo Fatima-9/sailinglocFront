@@ -340,7 +340,10 @@ export default function AdminDashboard() {
         headers: getAuthHeaders(token)
       });
       
-      setBoats(data.boats.map(boat => ({
+      // Vérifier si data est un tableau ou un objet avec une propriété boats
+      const boatsData = Array.isArray(data) ? data : (data.boats || []);
+      
+      setBoats(boatsData.map(boat => ({
           id: boat._id,
           nom: boat.nom,
           type: boat.type,
@@ -354,8 +357,17 @@ export default function AdminDashboard() {
           proprietaire: boat.proprietaire
         })));
 
+        // Gérer la pagination si elle existe
         if (data.pagination) {
           setBoatsPagination(data.pagination);
+        } else if (Array.isArray(data)) {
+          // Si data est un tableau simple, créer une pagination par défaut
+          setBoatsPagination({
+            currentPage: boatsCurrentPage,
+            totalPages: 1,
+            totalBoats: boatsData.length,
+            boatsPerPage: boatsPerPage
+          });
         }
     } catch (error) {
       console.error('Erreur lors de la récupération des bateaux:', error);
