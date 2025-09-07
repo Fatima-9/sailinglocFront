@@ -61,7 +61,7 @@ export default function Profil() {
       const userId = localStorage.getItem('userId');
       console.log('🔄 Mise à jour du profil dans MongoDB...');
       
-      await apiCall('https://sailingloc-back-lilac.vercel.app/api/user/update', {
+      const data = await apiCall('https://sailingloc-back-lilac.vercel.app/api/user/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,8 +75,8 @@ export default function Profil() {
           siren: formData.siren
         })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Erreur lors de la mise à jour');
+      
+      console.log('✅ Profil mis à jour avec succès:', data);
       // Met à jour le localStorage
       localStorage.setItem('userNom', data.user.nom);
       localStorage.setItem('userPrenom', data.user.prenom);
